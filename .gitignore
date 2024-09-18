@@ -1,0 +1,12 @@
+target
+**/*.rs.bk
+.idea
+*.iml
+/result*
+*.log
+*~
+store-path-pre-build
+.devenv*
+devenv.local.nix
+.direnv/
+.pre-commit-config.yaml
