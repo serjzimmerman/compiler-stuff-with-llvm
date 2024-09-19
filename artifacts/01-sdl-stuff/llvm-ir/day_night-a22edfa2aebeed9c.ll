@@ -368,13 +368,13 @@ bb8:                                              ; preds = %bb18.i, %"_ZN4core6
   %iter.sroa.5.114 = phi i64 [ %iter.sroa.8.0, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18" ], [ %iter.sroa.5.0, %bb18.i ]
   %iter.sroa.0.113 = phi i64 [ 1, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18" ], [ %iter.sroa.0.0, %bb18.i ]
   %_5.sroa.7.1 = phi i64 [ %elt_b.sroa.0.031.ph.ph.i, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18" ], [ %iter.sroa.15.0, %bb18.i ]
-  %_10 = trunc i64 %iter.sroa.5.114 to i16
-  %_11 = trunc i64 %_5.sroa.7.1 to i16
+  %_10 = trunc i64 %iter.sroa.5.114 to i32
+  %_11 = trunc i64 %_5.sroa.7.1 to i32
   %0 = getelementptr inbounds [256 x [512 x i8]], ptr %self, i64 0, i64 %_5.sroa.7.1, i64 %iter.sroa.5.114
   %1 = load i8, ptr %0, align 1, !range !9, !noundef !4
   %_13.not = icmp eq i8 %1, 0
   %. = select i1 %_13.not, i32 -65536, i32 -16711936
-  tail call void @sim_put_pixel(i16 noundef zeroext %_10, i16 noundef zeroext %_11, i32 noundef %.) #11
+  tail call void @sim_put_pixel(i32 noundef %_10, i32 noundef %_11, i32 noundef %.) #11
   br label %bb2
 }
 
@@ -485,13 +485,13 @@ bb8.i:                                            ; preds = %"_ZN4core6option15O
   %iter.sroa.5.114.i21 = phi i64 [ %iter.sroa.8.0.i10, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18.i15" ], [ %iter.sroa.5.0.i9, %bb18.i.i24 ]
   %iter.sroa.0.113.i22 = phi i64 [ 1, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18.i15" ], [ %iter.sroa.0.0.i8, %bb18.i.i24 ]
   %_5.sroa.7.1.i = phi i64 [ %elt_b.sroa.0.031.ph.ph.i.i17, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18.i15" ], [ %iter.sroa.15.0.i11, %bb18.i.i24 ]
-  %_10.i23 = trunc i64 %iter.sroa.5.114.i21 to i16
-  %_11.i = trunc i64 %_5.sroa.7.1.i to i16
+  %_10.i23 = trunc i64 %iter.sroa.5.114.i21 to i32
+  %_11.i = trunc i64 %_5.sroa.7.1.i to i32
   %5 = getelementptr inbounds [256 x [512 x i8]], ptr %board1, i64 0, i64 %_5.sroa.7.1.i, i64 %iter.sroa.5.114.i21
   %6 = load i8, ptr %5, align 1, !range !9, !alias.scope !13, !noundef !4
   %_13.not.i = icmp eq i8 %6, 0
   %..i = select i1 %_13.not.i, i32 -65536, i32 -16711936
-  tail call void @sim_put_pixel(i16 noundef zeroext %_10.i23, i16 noundef zeroext %_11.i, i32 noundef %..i) #11, !noalias !13
+  tail call void @sim_put_pixel(i32 noundef %_10.i23, i32 noundef %_11.i, i32 noundef %..i) #11, !noalias !13
   br label %bb2.i7
 
 draw.exit:                                        ; preds = %bb9.i.i13, %bb1.i.i.i27
@@ -708,13 +708,13 @@ bb8.i65:                                          ; preds = %"_ZN4core6option15O
   %iter.sroa.5.114.i68 = phi i64 [ %iter.sroa.8.0.i56, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18.i61" ], [ %iter.sroa.5.0.i55, %bb18.i.i75 ]
   %iter.sroa.0.113.i69 = phi i64 [ 1, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18.i61" ], [ %iter.sroa.0.0.i54, %bb18.i.i75 ]
   %_5.sroa.7.1.i70 = phi i64 [ %elt_b.sroa.0.031.ph.ph.i.i63, %"_ZN4core6option15Option$LT$T$GT$18get_or_insert_with17ha12f119ccbbcb787E.exit.i.thread18.i61" ], [ %iter.sroa.15.0.i57, %bb18.i.i75 ]
-  %_10.i71 = trunc i64 %iter.sroa.5.114.i68 to i16
-  %_11.i72 = trunc i64 %_5.sroa.7.1.i70 to i16
+  %_10.i71 = trunc i64 %iter.sroa.5.114.i68 to i32
+  %_11.i72 = trunc i64 %_5.sroa.7.1.i70 to i32
   %20 = getelementptr inbounds [256 x [512 x i8]], ptr %board2, i64 0, i64 %_5.sroa.7.1.i70, i64 %iter.sroa.5.114.i68
   %21 = load i8, ptr %20, align 1, !range !9, !alias.scope !25, !noundef !4
   %_13.not.i73 = icmp eq i8 %21, 0
   %..i74 = select i1 %_13.not.i73, i32 -65536, i32 -16711936
-  tail call void @sim_put_pixel(i16 noundef zeroext %_10.i71, i16 noundef zeroext %_11.i72, i32 noundef %..i74) #11, !noalias !25
+  tail call void @sim_put_pixel(i32 noundef %_10.i71, i32 noundef %_11.i72, i32 noundef %..i74) #11, !noalias !25
   br label %bb2.i53
 
 draw.exit80:                                      ; preds = %bb9.i.i59, %bb1.i.i.i78
@@ -922,7 +922,7 @@ declare noundef i32 @sim_rand() unnamed_addr #4
 declare void @_ZN4core9panicking18panic_bounds_check17h9397cb495d89a72dE(i64 noundef, i64 noundef, ptr noalias noundef readonly align 8 dereferenceable(24)) unnamed_addr #7
 
 ; Function Attrs: nounwind nonlazybind uwtable
-declare void @sim_put_pixel(i16 noundef zeroext, i16 noundef zeroext, i32 noundef) unnamed_addr #4
+declare void @sim_put_pixel(i32 noundef, i32 noundef, i32 noundef) unnamed_addr #4
 
 ; Function Attrs: nounwind nonlazybind uwtable
 declare void @sim_init() unnamed_addr #4
@@ -978,7 +978,7 @@ attributes #12 = { noreturn }
 !2 = !{i32 2, !"RtLibUseGOT", i32 1}
 !3 = !{!"rustc version 1.81.0 (eeb90cda1 2024-09-04)"}
 !4 = !{}
-!5 = !{i32 2381884}
+!5 = !{i32 2381785}
 !6 = !{!7}
 !7 = distinct !{!7, !8, !"_ZN3std2rt10lang_start28_$u7b$$u7b$closure$u7d$$u7d$17h96d0021b3f1d3e68E: %_1"}
 !8 = distinct !{!8, !"_ZN3std2rt10lang_start28_$u7b$$u7b$closure$u7d$$u7d$17h96d0021b3f1d3e68E"}

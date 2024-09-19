@@ -5,7 +5,7 @@ use compiler_stuff_with_llvm::graphics::{
 use itertools::iproduct;
 
 struct Board {
-    pub pixels: [[bool; SIM_X_SIZE as usize]; SIM_Y_SIZE as usize],
+    pub pixels: [[bool; SIM_X_SIZE]; SIM_Y_SIZE],
 }
 
 const ALIVE_COLOR: u32 = 0xff00ff00;
@@ -15,13 +15,13 @@ impl Board {
     #[no_mangle]
     pub fn new() -> Self {
         Board {
-            pixels: [[false; SIM_X_SIZE as usize]; SIM_Y_SIZE as usize],
+            pixels: [[false; SIM_X_SIZE]; SIM_Y_SIZE],
         }
     }
 
     #[no_mangle]
     pub fn randomly_fill(self: &mut Self) {
-        for (x, y) in iproduct!(0..SIM_X_SIZE as usize, 0..SIM_Y_SIZE as usize) {
+        for (x, y) in iproduct!(0..SIM_X_SIZE, 0..SIM_Y_SIZE) {
             self.pixels[y][x] = sim_rand() & 1 == 1;
         }
     }
@@ -38,8 +38,8 @@ impl Board {
                 continue;
             }
 
-            let x = wrap_coord(x_center as i32, SIM_X_SIZE as usize, x_off);
-            let y = wrap_coord(y_center as i32, SIM_Y_SIZE as usize, y_off);
+            let x = wrap_coord(x_center as i32, SIM_X_SIZE, x_off);
+            let y = wrap_coord(y_center as i32, SIM_Y_SIZE, y_off);
 
             alive_neighbours += if self.pixels[y][x] { 1 } else { 0 };
         }
@@ -60,17 +60,17 @@ impl Board {
 
     #[no_mangle]
     pub fn iterate(self: &mut Self, other: &Self) {
-        for (x, y) in iproduct!(0..SIM_X_SIZE as usize, 0..SIM_Y_SIZE as usize) {
+        for (x, y) in iproduct!(0..SIM_X_SIZE, 0..SIM_Y_SIZE) {
             self.pixels[y][x] = other.get_next_cell_state(x, y);
         }
     }
 
     #[no_mangle]
     pub fn draw(self: &Self) {
-        for (x, y) in iproduct!(0..SIM_X_SIZE as usize, 0..SIM_Y_SIZE as usize) {
+        for (x, y) in iproduct!(0..SIM_X_SIZE, 0..SIM_Y_SIZE) {
             sim_put_pixel(
-                x as u16,
-                y as u16,
+                x as i32,
+                y as i32,
                 if self.pixels[y][x] {
                     ALIVE_COLOR
                 } else {

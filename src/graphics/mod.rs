@@ -1,6 +1,6 @@
 pub const FRAME_TICKS: u32 = 50;
-pub const SIM_X_SIZE: u32 = 512;
-pub const SIM_Y_SIZE: u32 = 256;
+pub const SIM_X_SIZE: usize = 512;
+pub const SIM_Y_SIZE: usize = 256;
 
 use rand::Rng;
 use sdl2::event::Event;
@@ -51,7 +51,7 @@ fn init_canvas() {
     let window = get_context()
         .video()
         .unwrap()
-        .window("Sim Graphics", SIM_X_SIZE, SIM_Y_SIZE)
+        .window("Sim Graphics", SIM_X_SIZE as u32, SIM_Y_SIZE as u32)
         .build()
         .expect("Failed to create SDL window");
 
@@ -98,7 +98,7 @@ pub extern "C" fn sim_flush() {
 
     let current_ticks = timer.ticks64();
     let prev_ticks = unsafe { CURRENT_TICKS };
-    let ticks_passed = (current_ticks - prev_ticks) as u32;
+    let ticks_passed: u32 = (current_ticks - prev_ticks) as u32;
 
     if ticks_passed < FRAME_TICKS.into() {
         timer.delay(FRAME_TICKS - ticks_passed);
@@ -119,9 +119,9 @@ pub extern "C" fn sim_flush() {
 }
 
 #[no_mangle]
-pub extern "C" fn sim_put_pixel(x: u16, y: u16, argb: u32) {
-    assert!(x < SIM_X_SIZE as u16);
-    assert!(y < SIM_Y_SIZE as u16);
+pub extern "C" fn sim_put_pixel(x: i32, y: i32, argb: u32) {
+    assert!(x < SIM_X_SIZE as i32);
+    assert!(y < SIM_Y_SIZE as i32);
 
     let a: u8 = (argb >> 24) as u8;
     let r: u8 = ((argb >> 16) & 0xFF) as u8;
@@ -132,7 +132,7 @@ pub extern "C" fn sim_put_pixel(x: u16, y: u16, argb: u32) {
     let canvas = get_canvas();
     canvas.set_draw_color(color);
 
-    let point = Point::new(x as i32, y as i32);
+    let point = Point::new(x, y);
     canvas
         .draw_point(point)
         .expect(format!("Failed to draw point {:?}", point).as_str());
