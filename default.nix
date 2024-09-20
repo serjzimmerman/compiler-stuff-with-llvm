@@ -18,6 +18,10 @@ rustPlatform.buildRustPackage {
     lockFile = ./Cargo.lock;
   };
 
+  dontUseMesonConfigure = true;
+  dontUseNinjaBuild = true;
+  dontUseNinjaInstall = true;
+
   nativeBuildInputs = [
     llvmPackages_18.libllvm
     meson
