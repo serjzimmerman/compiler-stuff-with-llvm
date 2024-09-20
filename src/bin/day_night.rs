@@ -12,21 +12,18 @@ const ALIVE_COLOR: u32 = 0xff00ff00;
 const DEAD_COLOR: u32 = 0xffff0000;
 
 impl Board {
-    #[no_mangle]
     pub fn new() -> Self {
         Board {
             pixels: [[false; SIM_X_SIZE]; SIM_Y_SIZE],
         }
     }
 
-    #[no_mangle]
     pub fn randomly_fill(self: &mut Self) {
         for (x, y) in iproduct!(0..SIM_X_SIZE, 0..SIM_Y_SIZE) {
             self.pixels[y][x] = sim_rand() & 1 == 1;
         }
     }
 
-    #[no_mangle]
     fn get_next_cell_state(self: &Self, x_center: usize, y_center: usize) -> bool {
         let wrap_coord = |coord: i32, size: usize, offset: i32| {
             (coord + offset).rem_euclid(size as i32) as usize
@@ -58,14 +55,12 @@ impl Board {
         }
     }
 
-    #[no_mangle]
     pub fn iterate(self: &mut Self, other: &Self) {
         for (x, y) in iproduct!(0..SIM_X_SIZE, 0..SIM_Y_SIZE) {
             self.pixels[y][x] = other.get_next_cell_state(x, y);
         }
     }
 
-    #[no_mangle]
     pub fn draw(self: &Self) {
         for (x, y) in iproduct!(0..SIM_X_SIZE, 0..SIM_Y_SIZE) {
             sim_put_pixel(

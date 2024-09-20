@@ -45,6 +45,7 @@
               rustPlatform = pkgs.makeRustPlatform {
                 cargo = rustToolchain;
                 rustc = rustToolchain;
+                stdenv = pkgs.llvmPackages_18.stdenv;
               };
             in
             {

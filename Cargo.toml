@@ -1,8 +1,11 @@
 [package]
-name = "compiler-stuff-with-llvm"
+name = "compiler_stuff_with_llvm"
 publish = false
 version = "0.1.0"
 edition = "2021"
+
+[lib]
+crate-type = ["staticlib", "rlib"]
 
 [features]
 cbindgen = []

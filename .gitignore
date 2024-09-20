@@ -1,12 +1,10 @@
-target
+/target
+/build/
 **/*.rs.bk
-.idea
-*.iml
 /result*
 *.log
 *~
-store-path-pre-build
-.devenv*
-devenv.local.nix
-.direnv/
+/.direnv/
 .pre-commit-config.yaml
+compile_commands.json
+.cache/
