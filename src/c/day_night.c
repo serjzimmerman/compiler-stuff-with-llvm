@@ -21,7 +21,7 @@ void randomly_fill_board(board_t *board_ptr) {
 
   for (int x = 0; x < SIM_X_SIZE; ++x) {
     for (int y = 0; y < SIM_Y_SIZE; ++y) {
-      board_ptr->pixels[x][y] = ((sim_rand() & 1) == 1) ? true: false;
+      board_ptr->pixels[x][y] = ((sim_rand() & 1) == 1) ? true : false;
     }
   }
 }
@@ -91,7 +91,7 @@ int main() {
   int board_index = 0;
 
   sim_init();
-  
+
   randomly_fill_board(&board1);
   for (int step = 0; step < MAX_STEPS; ++step) {
     if (board_index == 0) {
