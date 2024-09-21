@@ -8,7 +8,6 @@ project(
   default_options: ['warning_level=3', 'cpp_std=c++17', 'werror=true'],
 )
 
-fs = import('fs')
 cc = meson.get_compiler('c')
 clang_cc = find_program('clang')
 release = get_option('buildtype').startswith('release')
@@ -23,39 +22,24 @@ if get_option('build_rust_deps')
 
   cargo_build = find_program('scripts' / 'build_cargo.sh')
 
-  message(
-    'Running cargo: @0@ @1@'.format(
-      fs.relative_to(cargo_build.full_path(), meson.current_source_dir()),
-      ' '.join(cargo_args),
-    ),
-  )
-
-  cargo_result = run_command(cargo_build, cargo_args, check: true)
-  cargo_stdout = cargo_result.stdout().strip()
-  cargo_stderr = cargo_result.stderr().strip()
-
-  if cargo_stderr != ''
-    message(cargo_stderr)
-  elif cargo_stdout != ''
-    message(cargo_stdout)
-  else
-    message('Cargo is done')
-  endif
-
   if release
     rust_target_dir = 'release'
   else
     rust_target_dir = 'debug'
   endif
 
+  rust_build_dir = meson.current_source_dir() / 'target' / rust_target_dir
+  cswl_cargo = custom_target(
+    'cswl_cargo',
+    command: [cargo_build]
+    + [rust_target_dir, meson.current_build_dir() / '@OUTPUT@']
+    + cargo_args,
+    output: ['libcompiler_stuff_with_llvm.a'],
+  )
+
   cswl_dep = declare_dependency(
-    dependencies: [
-      cc.find_library(
-        'compiler_stuff_with_llvm',
-        dirs: [meson.current_source_dir() / 'target' / rust_target_dir],
-      ),
-      dependency('sdl2'),
-    ],
+    dependencies: [dependency('sdl2')],
+    sources: [cswl_cargo],
     include_directories: include_directories('include'),
   )
 endif
