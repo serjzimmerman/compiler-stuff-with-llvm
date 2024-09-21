@@ -5,15 +5,17 @@ project(
   'compiler_stuff_with_llvm',
   ['c', 'cpp', 'rust'],
   version: '0.1.0',
-  default_options: ['warning_level=3', 'cpp_std=c++17', 'werror=true'],
+  default_options: ['warning_level=3', 'cpp_std=c++20', 'werror=true'],
 )
 
-cc = meson.get_compiler('c')
 clang_cc = find_program('clang')
 release = get_option('buildtype').startswith('release')
 
 if get_option('build_rust_deps')
-  find_program('cargo', required: true)
+  find_program(
+    'cargo',
+    required: true,
+  )
   if release
     cargo_args = ['--release']
   else
@@ -31,9 +33,7 @@ if get_option('build_rust_deps')
   rust_build_dir = meson.current_source_dir() / 'target' / rust_target_dir
   cswl_cargo = custom_target(
     'cswl_cargo',
-    command: [cargo_build]
-    + [rust_target_dir, meson.current_build_dir() / '@OUTPUT@']
-    + cargo_args,
+    command: [cargo_build] + [rust_target_dir, meson.current_build_dir() / '@OUTPUT@'] + cargo_args,
     output: ['libcompiler_stuff_with_llvm.a'],
   )
 
@@ -53,14 +53,6 @@ executable(
 
 custom_target(
   'day_night_c_ir',
-  command: [
-    clang_cc,
-    '-emit-llvm',
-    '-S',
-    '-O2',
-    '-DNDEBUG',
-    '-I', meson.current_source_dir() / 'include',
-    '-c', meson.current_source_dir() / 'src/c/day_night.c',
-  ],
+  command: [clang_cc, '-emit-llvm', '-S', '-O2', '-DNDEBUG', '-I', meson.current_source_dir() / 'include', '-c', meson.current_source_dir() / 'src/c/day_night.c'],
   output: 'day_night.ll',
 )
