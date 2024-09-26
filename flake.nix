@@ -31,6 +31,7 @@
       imports = [
         ./nix/rust-overlay/flake-module.nix
         ./nix/treefmt/flake-module.nix
+        ./nix/devshell/flake-module.nix
       ];
 
       perSystem =
@@ -45,14 +46,13 @@
               rustPlatform = pkgs.makeRustPlatform {
                 cargo = rustToolchain;
                 rustc = rustToolchain;
-                stdenv = pkgs.llvmPackages_18.stdenv;
               };
             in
             {
-              compiler-stuff-with-llvm = pkgs.callPackage ./. {
+              cswl-sim = pkgs.callPackage ./cswl-sim {
                 inherit rustPlatform;
               };
-              default = packages.compiler-stuff-with-llvm;
+              default = packages.cswl-sim;
               inherit rustToolchain;
             };
         };

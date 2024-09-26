@@ -1,4 +1,4 @@
-use compiler_stuff_with_llvm::graphics::{
+use cswl_sim::graphics::{
     sim_exit, sim_flush, sim_init, sim_put_pixel, sim_rand, SIM_X_SIZE, SIM_Y_SIZE,
 };
 

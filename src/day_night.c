@@ -2,7 +2,7 @@
 // @file c/day_night.c
 // -----------------------------------------------------------------------------
 
-#include "cbindgen/bindings.h"
+#include "cswl-sim/bindings.h"
 
 #include <assert.h>
 #include <stdbool.h>
