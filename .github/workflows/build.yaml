@@ -1,10 +1,20 @@
 on:
   - push
 jobs:
-  check-linux:
-    runs-on: ubuntu-22.04
+  check-flake:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v24
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: cachix/install-nix-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@v8
+      - run: nix flake check
       - run: nix build -L
+  check-meson:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v29
+      - uses: DeterminateSystems/magic-nix-cache-action@v8
+      - uses: nicknovitski/nix-develop@v1
+      - run: meson setup build -Dbuildtype=release
+      - run: meson compile -C build
