@@ -15,6 +15,7 @@
         rustfmt.enable = true;
         clang-format.enable = true;
         meson.enable = true;
+        beautysh.enable = true;
       };
     };
   };
