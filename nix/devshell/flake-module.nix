@@ -26,6 +26,7 @@
               ninja
               meson
               pkg-config
+              cargo-watch
             ];
           }).overrideAttrs
             { allowSubstitutes = false; };

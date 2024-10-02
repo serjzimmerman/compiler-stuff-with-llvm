@@ -2,35 +2,17 @@
 // See https://github.com/banach-space/llvm-tutor/blob/main/HelloWorld/HelloWorld.cpp
 // for a more detailed explanation.
 
-use llvm_plugin::inkwell::values::FunctionValue;
-use llvm_plugin::{
-    FunctionAnalysisManager, LlvmFunctionPass, PassBuilder, PipelineParsing, PreservedAnalyses,
-};
+pub mod passes;
 
-#[llvm_plugin::plugin(name = "hello-world", version = "0.1")]
+use llvm_plugin::{PassBuilder, PipelineParsing};
+
+#[llvm_plugin::plugin(name = "cswl-sim", version = "0.1")]
 fn plugin_registrar(builder: &mut PassBuilder) {
-    builder.add_function_pipeline_parsing_callback(|name, manager| {
-        if name == "hello-world" {
-            manager.add_pass(HelloWorldPass);
+    builder.add_module_pipeline_parsing_callback(|name, manager| match name {
+        "opcode-counter" => {
+            manager.add_pass(passes::opcode_counter::OpcodeCounterPass);
             PipelineParsing::Parsed
-        } else {
-            PipelineParsing::NotParsed
         }
+        _ => PipelineParsing::NotParsed,
     });
-}
-
-struct HelloWorldPass;
-impl LlvmFunctionPass for HelloWorldPass {
-    fn run_pass(
-        &self,
-        function: &mut FunctionValue,
-        _manager: &FunctionAnalysisManager,
-    ) -> PreservedAnalyses {
-        eprintln!("(llvm-tutor) Hello from: {:?}", function.get_name());
-        eprintln!(
-            "(llvm-tutor)   number of arguments: {}",
-            function.count_params()
-        );
-        PreservedAnalyses::All
-    }
 }
