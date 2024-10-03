@@ -21,3 +21,4 @@ llvm12-0 = ["llvm-plugin/llvm12-0", "inkwell/llvm12-0"]
 llvm-plugin = "0.6"
 inkwell = "0.5"
 prettytable-rs = "0.10.0"
+ffi = "0.1.1"

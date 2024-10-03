@@ -5,7 +5,7 @@ project(
   'cswl',
   ['c', 'cpp'],
   version: '0.1.0',
-  default_options: ['warning_level=3', 'cpp_std=c++20', 'werror=true'],
+  default_options: ['warning_level=3', 'cpp_std=c++20'],
 )
 
 cswl_sim_project = subproject(

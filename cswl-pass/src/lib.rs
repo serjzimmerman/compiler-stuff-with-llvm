@@ -13,6 +13,10 @@ fn plugin_registrar(builder: &mut PassBuilder) {
             manager.add_pass(passes::opcode_counter::OpcodeCounterPass);
             PipelineParsing::Parsed
         }
+        "log-inserter" => {
+            manager.add_pass(passes::log_inserter::LogInserterPass);
+            PipelineParsing::Parsed
+        }
         _ => PipelineParsing::NotParsed,
     });
 }
