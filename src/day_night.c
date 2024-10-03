@@ -16,7 +16,7 @@ struct board_s {
 
 typedef struct board_s board_t;
 
-void randomly_fill_board(board_t *board_ptr) {
+static void randomly_fill_board(board_t *board_ptr) {
   assert(board_ptr);
 
   for (int x = 0; x < SIM_X_SIZE; ++x) {
@@ -26,7 +26,7 @@ void randomly_fill_board(board_t *board_ptr) {
   }
 }
 
-int wrap_coordinate(int x, int offset, int size) {
+static int wrap_coordinate(int x, int offset, int size) {
   assert(offset >= -1 && offset <= 1);
   assert(x >= 0 && x < size);
   if (offset == 0)
@@ -38,7 +38,8 @@ int wrap_coordinate(int x, int offset, int size) {
   return x + offset;
 }
 
-bool get_next_cell_state(const board_t *board_ptr, int x_center, int y_center) {
+static bool get_next_cell_state(const board_t *board_ptr, int x_center,
+                                int y_center) {
   assert(board_ptr);
 
   assert(x_center >= 0 && x_center < SIM_X_SIZE);
@@ -62,7 +63,7 @@ bool get_next_cell_state(const board_t *board_ptr, int x_center, int y_center) {
           alive_count == 8);
 }
 
-void get_next_state(const board_t *prev, board_t *next) {
+static void get_next_state(const board_t *prev, board_t *next) {
   assert(prev);
   assert(next);
 
@@ -73,7 +74,7 @@ void get_next_state(const board_t *prev, board_t *next) {
   }
 }
 
-void draw_board(const board_t *board_ptr) {
+static void draw_board(const board_t *board_ptr) {
   assert(board_ptr);
 
   for (int x = 0; x < SIM_X_SIZE; ++x) {
@@ -86,8 +87,8 @@ void draw_board(const board_t *board_ptr) {
 #define MAX_STEPS 10000
 
 int main() {
-  board_t board1 = {0};
-  board_t board2 = {0};
+  board_t board1;
+  board_t board2;
   int board_index = 0;
 
   sim_init();
