@@ -1,0 +1,55 @@
++----------------------------+----------+
+| Opcode windows of length 2 | Count    |
++----------------------------+----------+
+| [getelementptr, load]      | 13107082 |
+| [load, add]                | 9174949  |
+| [add, getelementptr]       | 7869361  |
+| [icmp, br]                 | 4068854  |
+| [add, icmp]                | 2758139  |
+| [load, icmp]               | 2621426  |
+| [br, getelementptr]        | 2621426  |
+| [br, icmp]                 | 1315836  |
+| [br, br]                   | 1311218  |
+| [trunc, call]              | 1310720  |
+| [call, add]                | 1310720  |
+| [select, trunc]            | 1310720  |
+| [icmp, select]             | 1310720  |
+| [shl, add]                 | 1310707  |
+| [select, getelementptr]    | 1310707  |
+| [add, ashr]                | 1310707  |
+| [add, and]                 | 1310707  |
+| [icmp, shl]                | 1310707  |
+| [and, select]              | 1310707  |
+| [load, getelementptr]      | 1310707  |
+| [icmp, add]                | 1310706  |
+| [getelementptr, store]     | 1310706  |
+| [ashr, getelementptr]      | 1305587  |
+| [add, add]                 | 1305587  |
+| [store, icmp]              | 1305586  |
+| [trunc, br]                | 1069924  |
+| [lshr, trunc]              | 1064804  |
+| [shl, zext]                | 1064804  |
+| [zext, lshr]               | 1064804  |
+| [br, shl]                  | 1064804  |
+| [br, call]                 | 131091   |
+| [call, getelementptr]      | 131072   |
+| [trunc, and]               | 131072   |
+| [and, store]               | 131072   |
+| [store, add]               | 131072   |
+| [getelementptr, trunc]     | 131072   |
+| [br, add]                  | 5632     |
+| [ashr, select]             | 5120     |
+| [icmp, icmp]               | 5120     |
+| [store, br]                | 5120     |
+| [select, add]              | 5120     |
+| [br, trunc]                | 5120     |
+| [call, br]                 | 11       |
+| [return, br]               | 9        |
+| [br, return]               | 9        |
+| [call, and]                | 9        |
+| [xor, add]                 | 9        |
+| [and, xor]                 | 9        |
+| [call, call]               | 4        |
+| [alloca, alloca]           | 1        |
+| [alloca, call]             | 1        |
++----------------------------+----------+

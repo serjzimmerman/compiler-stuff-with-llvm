@@ -60,4 +60,11 @@ clang artifacts/02-pass-stuff/llvm-ir/instrumented.ll \
   target/release/libcswl_pass_logger.a \
   target/release/libcswl_sim.a \
   -lSDL2 -O2 -o build/day_night_c_instrumented
+CSWL_PASS_LOGGER_OUTPUT_PATH=output.log timeout 4s build/day_night_c_instrumented
+target/release/cswl-pass-statistics < output.log > statistics.txt
+csplit statistics.txt '/_snip_here_/' '{*}' \
+  --prefix artifacts/02-pass-stuff/results/window- \
+  --digits 1 \
+  --suppress-matched
+rm artifacts/02-pass-stuff/results/window-0 statistics.txt
 ```
