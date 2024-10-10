@@ -69,7 +69,7 @@ csplit statistics.txt '/_snip_here_/' '{*}' \
 rm artifacts/02-pass-stuff/results/window-0 statistics.txt
 ```
 
-### Ad-hoc LLVM IR generation
+### 💀 Ad-hoc LLVM IR generation 💔
 
 Manual build instructions:
 
