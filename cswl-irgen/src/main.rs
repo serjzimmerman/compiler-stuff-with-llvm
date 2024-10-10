@@ -74,19 +74,6 @@ fn get_sim_put_pixel_function<'ctx>(module: &'ctx Module) -> FunctionValue<'ctx>
     }
 }
 
-fn get_log_int_function<'ctx>(module: &'ctx Module) -> FunctionValue<'ctx> {
-    let ctx = module.get_context();
-    const LOG_INT_NAME: &str = "log_int";
-    match module.get_function(LOG_INT_NAME) {
-        Some(function) => function,
-        None => {
-            let i32_type = ctx.i32_type().into();
-            let func_type = ctx.void_type().fn_type(&[i32_type], false);
-            module.add_function(LOG_INT_NAME, func_type, Some(Linkage::External))
-        }
-    }
-}
-
 fn build_main(module: &Module, builder: &Builder) -> Result<(), BuilderError> {
     let ctx = module.get_context();
 
@@ -449,11 +436,6 @@ impl From<LLVMString> for Error {
     fn from(e: LLVMString) -> Self {
         Error::StringError(e)
     }
-}
-
-#[no_mangle]
-pub extern "C" fn log_int(val: u32) {
-    eprintln!("{val}");
 }
 
 fn build_get_next_state(module: &Module, builder: &Builder) -> Result<(), BuilderError> {
@@ -934,7 +916,6 @@ fn run_with_execution_engine(module: &Module) -> Result<(), LLVMString> {
     ee.add_global_mapping(&get_sim_init_function(&module), sim_init as usize);
     ee.add_global_mapping(&get_sim_rand_function(&module), sim_rand as usize);
     ee.add_global_mapping(&get_sim_put_pixel_function(&module), sim_put_pixel as usize);
-    ee.add_global_mapping(&get_log_int_function(&module), log_int as usize);
 
     unsafe {
         ee.run_function_as_main(module.get_function("main").unwrap(), &[]);
