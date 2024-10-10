@@ -68,3 +68,13 @@ csplit statistics.txt '/_snip_here_/' '{*}' \
   --suppress-matched
 rm artifacts/02-pass-stuff/results/window-0 statistics.txt
 ```
+
+### Ad-hoc LLVM IR generation
+
+Manual build instructions:
+
+```bash
+mkdir artifacts/03-ad-hoc-ir-generation/llvm-ir -p
+cargo run --package cswl-irgen --release > \
+  artifacts/03-ad-hoc-ir-generation/llvm-ir/day_night.ll
+```

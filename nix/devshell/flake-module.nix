@@ -20,6 +20,7 @@
                 SDL2
                 self'.packages.rustToolchain
                 libffi
+                libxml2
               ])
               ++ [ llvmPackages.libllvm ];
             nativeBuildInputs = with pkgs; [

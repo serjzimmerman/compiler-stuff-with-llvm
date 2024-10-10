@@ -1,0 +1,19 @@
+[package]
+name = "cswl-irgen"
+publish = false
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["llvm18-0"]
+llvm18-0 = ["inkwell/llvm18-0"]
+llvm17-0 = ["inkwell/llvm17-0"]
+llvm16-0 = ["inkwell/llvm16-0"]
+llvm15-0 = ["inkwell/llvm15-0"]
+llvm14-0 = ["inkwell/llvm14-0"]
+llvm13-0 = ["inkwell/llvm13-0"]
+llvm12-0 = ["inkwell/llvm12-0"]
+
+[dependencies]
+inkwell = "0.5"
+cswl-sim = { path = "../cswl-sim" }
