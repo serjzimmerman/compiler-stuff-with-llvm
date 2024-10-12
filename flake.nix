@@ -42,7 +42,12 @@
         rec {
           packages =
             let
-              rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+              # https://www.github.com/oxalica/rust-overlay/issues/70#issuecomment-1153789106
+              rustToolchain = (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml).overrideAttrs {
+                propagatedBuildInputs = [ ];
+                depsHostHostPropagated = [ ];
+                depsTargetTargetPropagated = [ ];
+              };
               rustPlatform = pkgs.makeRustPlatform {
                 cargo = rustToolchain;
                 rustc = rustToolchain;

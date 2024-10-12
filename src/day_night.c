@@ -86,7 +86,7 @@ static void draw_board(const board_t *board_ptr) {
 
 #define MAX_STEPS 10000
 
-int main() {
+int main(void) {
   board_t board1;
   board_t board2;
   int board_index = 0;

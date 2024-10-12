@@ -53,7 +53,7 @@ Manual build instructions:
 
 ```bash
 mkdir -p build
-cargo build --release
+cargo build --release --package cswl-pass --package cswl-pass-logger
 opt --load-pass-plugin target/release/libcswl_pass.so --passes=log-inserter \
   artifacts/01-sdl-stuff/llvm-ir/day_night.ll -o artifacts/02-pass-stuff/llvm-ir/instrumented.ll -S
 clang artifacts/02-pass-stuff/llvm-ir/instrumented.ll \
