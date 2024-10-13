@@ -1,6 +1,6 @@
 option(
-  'build_rust_deps',
-  type: 'boolean',
-  value: false,
-  description: 'Whether meson should invoke cargo to compile rust dependencies',
+    'build_rust_deps',
+    type: 'boolean',
+    value: false,
+    description: 'Whether meson should invoke cargo to compile rust dependencies',
 )

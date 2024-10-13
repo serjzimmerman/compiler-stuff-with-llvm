@@ -17,6 +17,13 @@
         meson.enable = true;
         beautysh.enable = true;
       };
+
+      settings.formatter.meson = {
+        includes = [
+          "cswl-sim/meson.build"
+          "cswl-sim/meson_options.txt"
+        ];
+      };
     };
   };
 }
