@@ -9,7 +9,7 @@
 
 %}
 
-%option noyywrap nounput noinput nodefault 
+%option noyywrap nounput noinput nodefault
 %option c++
 %option prefix="paracl_"
 %option yyclass="scanner"
@@ -69,12 +69,12 @@ cpp_style_comment ([/][/].*)
 
 {cpp_style_comment} { update_loc(); }
 
-. { 
+. {
   auto loc = update_loc();
   std::stringstream ss;
   ss << "Unknown character '" << yytext << "'";
   auto msg = ss.str();
-  m_driver.report_error(msg, loc); throw parser::syntax_error{loc, msg}; 
+  m_driver.report_error(msg, loc); throw parser::syntax_error{loc, msg};
 }
 
 <<EOF>> { return paracl::frontend::parser::make_EOF(update_loc()); }

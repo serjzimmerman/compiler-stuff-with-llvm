@@ -710,7 +710,7 @@ void codegen_visitor::generate_all(
 
   if (ast.get_root_ptr()) { // clang-format off
     ezvis::visit<void, frontend::ast::statement_block>(
-      [this](auto &st) { generate(st, true);  }, 
+      [this](auto &st) { generate(st, true);  },
       *ast.get_root_ptr()
     ); // clang-format on
   }

@@ -167,11 +167,11 @@ concept graph_node = requires() {
   typename t_node::value_type;
   typename t_node::attr_type;
   typename t_node::edge_type;
-  
+
   requires std::derived_from<
     t_node, basic_graph_node<
-      typename t_node::key_type, 
-      typename t_node::attr_type, 
+      typename t_node::key_type,
+      typename t_node::attr_type,
       typename t_node::edge_type
     >
   >;

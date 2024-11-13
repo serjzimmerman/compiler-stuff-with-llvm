@@ -33,7 +33,7 @@ class IVisitor {
 
 struct Rectangle : public IShape {
   float m_width, m_height;
-  
+
   void accept(IVisitor &visitor) override {
     visitor.visit(*this);
   }
@@ -41,7 +41,7 @@ struct Rectangle : public IShape {
 
 struct Circle : public IShape {
   float m_radius;
-  
+
   void accept(IVisitor &visitor) override {
     visitor.visit(*this);
   }
