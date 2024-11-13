@@ -1,4 +1,3 @@
 ctti/
-popl-1.3.0/*
-!popl-1.3.0/meson.build
+popl-1.3.0/
 packagecache/

@@ -3,6 +3,7 @@ directory = popl-1.3.0
 source_url = https://github.com/badaix/popl/archive/refs/tags/v1.3.0.tar.gz
 source_filename = popl-1.3.0.tar.gz
 source_hash = 7c59554371da3c6c093bd79c2f403f921c1938bd523f1a48682352e0d92883a6
+patch_directory = popl-1.3.0
 
 [provide]
 dependency_names = popl
