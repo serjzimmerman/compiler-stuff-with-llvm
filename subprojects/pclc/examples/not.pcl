@@ -1,0 +1,7 @@
+n = 0;
+x = ?;
+
+while (!(n > x)) {
+  print n;
+  n = n + 1;
+}

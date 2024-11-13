@@ -1,0 +1,5 @@
+b = func(n) { return 1; };
+
+func(a) : myprint {
+  print a;
+};

@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/Manu343726/ctti
+revision = d7e9828b82ce7a6321465fbd84f9bccb772c7f43
+depth = 1
+method = cmake
+
+[provide]
+ctti = ctti_dep

@@ -13,6 +13,7 @@ cswl_sim_project = subproject(
     default_options: ['build_rust_deps=true'],
 )
 
+pclc_project = subproject('pclc')
 clang_cc = find_program('clang')
 release = get_option('buildtype').startswith('release')
 
