@@ -1,0 +1,11 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+func(x):foo {
+  b = x;
+}
+
+i = 2;
+while(i > 0){
+  print foo(?);
+  i = i - 1;
+}

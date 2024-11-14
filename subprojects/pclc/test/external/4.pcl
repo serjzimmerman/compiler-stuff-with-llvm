@@ -1,0 +1,8 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+// COM: https://github.com/BiscuitsLayer/ParaCL
+
+x = 3;
+x = ?;
+print x;
+print x * ?;

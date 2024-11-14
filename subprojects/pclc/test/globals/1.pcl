@@ -1,0 +1,22 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+a = 0;
+b = 0;
+c = 0;
+
+func() : test {
+    b = 2;
+    c = 3;
+    d = 4; // d here is a local variable
+    a = 1;
+}
+
+d = 0; // local variable
+res = test();
+
+print a;
+print res;
+print b;
+print c;
+print d;

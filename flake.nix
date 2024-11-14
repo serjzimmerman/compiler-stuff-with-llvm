@@ -60,6 +60,7 @@
               };
               default = pkgs.callPackage ./. {
                 inherit rustToolchain rustPlatform;
+                llvmPackages = pkgs.llvmPackages_18;
               };
               cswl-everything = default;
               inherit rustToolchain;

@@ -1,3 +1,6 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
 fst = 0;
 snd = 1;
 iters = ?;

@@ -1,0 +1,7 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+func (x) : incr {
+  return x + 1;
+}
+print incr(1);

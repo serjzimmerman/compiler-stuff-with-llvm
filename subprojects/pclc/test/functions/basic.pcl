@@ -1,0 +1,7 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+a = 1;
+foo = func(x) { x * 42; }
+b = foo(a);
+print b; // 42

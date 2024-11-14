@@ -1,0 +1,31 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+// COM: github.com/Exactlywb/VladimirovsCourse
+
+i = ?;
+
+while (i > 0) {
+  num = ?;
+
+  if (num == 0)
+    print (0);
+
+  if (num == 1 || num == 2)
+    print (1);
+
+  if (num > 2) {
+    firstTmp = 1;
+    secondTmp = 1;
+    res = 3;
+
+    while (num > 2) {
+      res = firstTmp + secondTmp;
+      firstTmp = secondTmp;
+      secondTmp = res;
+      num = num - 1;
+    }
+
+    print (res);
+  }
+  i = i - 1;
+}

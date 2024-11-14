@@ -1,0 +1,7 @@
+// RUN: not pclc %s | tee %t.stdout
+
+foo = func () : foo {
+  print 1;
+}
+
+foo();

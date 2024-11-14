@@ -33,6 +33,7 @@
               cmake
               flex
               bison
+              lit
             ];
           }).overrideAttrs
             { allowSubstitutes = false; };

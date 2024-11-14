@@ -1,0 +1,12 @@
+// RUN: not pclc %s | tee %t.stdout
+
+a = func () {
+  print a;
+  return 1;
+}
+
+func (void func (int)a): bar {
+ a(1);
+}
+
+bar(foo);

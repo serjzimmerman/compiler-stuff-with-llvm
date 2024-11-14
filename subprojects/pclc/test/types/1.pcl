@@ -1,0 +1,8 @@
+// REQUIRES: filecheck
+// RUN: not pclc %s | FileCheck %s
+
+int b = c = d = { a = { a + 3; }; } + { 4 + 5; return 4; };
+
+// CHECK: 1.pcl:4.25: Use of undeclared variable `a`
+// CHECK: 4 |     int b = c = d = { a = { a + 3; }; } + { 4 + 5; return 4; };
+// CHECK:                             ~~~~^~~~~

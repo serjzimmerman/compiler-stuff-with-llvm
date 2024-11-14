@@ -1,0 +1,8 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+func (x, y): mult {
+  return x * y;
+}
+
+print mult(2, 3);

@@ -1,0 +1,18 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+func (x) : gt5 {
+  if (x <= 5 )
+  {
+    zero = 0;
+    also_zero = 0;
+    one_hundered_percent_zero = zero * also_zero + 0;
+    return zero;
+  }
+  one = 1;
+  one;
+  return one;
+}
+
+print gt5(5);
+print gt5(6);

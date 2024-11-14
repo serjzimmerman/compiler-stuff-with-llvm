@@ -1,0 +1,14 @@
+// RUN: not pclc %s | tee %t.stdout
+
+a = func(int x) : fact_error1 {
+  if (x == 0) return 1;
+  return fact_error1(x - 1) * x; // This is basically an analogy of C++ 'use before deduction`
+}
+
+b = func(int x) : fact_error2 {
+  if (x == 0) return 1;
+  return fact_error2(x - 1) * x;
+}
+
+fact_error1(1);
+fact_error2(1);

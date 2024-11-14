@@ -1,0 +1,11 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+// COM: https://github.com/BiscuitsLayer/ParaCL
+
+x = 0;
+
+if (x == 0) {
+  print x + 100;
+}
+
+print x;

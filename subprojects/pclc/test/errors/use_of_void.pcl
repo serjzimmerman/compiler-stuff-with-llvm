@@ -1,0 +1,5 @@
+// RUN: not pclc %s
+
+a = func(x, y) { print x + y; }
+a(1, 2); // ok
+b = a(1, 2); // error

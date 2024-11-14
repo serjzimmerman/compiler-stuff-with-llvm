@@ -1,0 +1,5 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+b = func(n) { n; print n; };
+b(3);

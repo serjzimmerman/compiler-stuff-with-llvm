@@ -1,0 +1,3 @@
+// RUN: pclc %s | tee %t.stdout
+
+a = b = func(x) {return 4;}

@@ -1,0 +1,15 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+func () : foo {
+  a = {{{5;};};};
+  b = 0;
+  if (1 == 1)
+  {
+  b = {{return 1;};};
+  }
+  print a;
+  print b;
+}
+
+foo();

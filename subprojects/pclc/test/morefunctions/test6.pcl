@@ -1,0 +1,12 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+b = func (x, y, z) : bar {
+  b = func () {
+    return 3;
+  }
+
+  b();
+}
+
+print b(1, 2, 3);

@@ -1,0 +1,6 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+a = 5; // Deduced type int
+int b = { a + 1; return a = a + 3; };
+print b;

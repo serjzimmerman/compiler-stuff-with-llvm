@@ -1,0 +1,13 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+a = func (): foo {
+  return 1;
+}
+
+func (int func ()b): bar {
+  return b(); //does not work without explicit 'return'
+}
+
+print bar(a);
+1;

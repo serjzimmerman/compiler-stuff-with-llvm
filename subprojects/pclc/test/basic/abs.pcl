@@ -1,0 +1,11 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+// COM: Testing assignments as expressions
+
+while ((x = ?) != 0) {
+  if ((y = ?) > 0) {
+    print y;
+  } else {
+    print -y;
+  }
+}

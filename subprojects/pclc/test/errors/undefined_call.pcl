@@ -1,0 +1,3 @@
+// RUN: not pclc %s | tee %t.stdout
+
+a(5);

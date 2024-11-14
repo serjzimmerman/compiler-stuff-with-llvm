@@ -1,0 +1,33 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+bar = func() {
+  x = 5;
+  y = 10;
+  x + y;
+};
+
+foo = func() {
+  x = 5;
+  y = 10;
+  x + y;
+}
+
+print (foo()); // 15
+print bar(); // 15
+
+t = bar();
+print t; // 15
+
+foo = bar; // reassign function ptr
+print foo(); // 15
+
+func(x) : buz {
+  if (x != 5)
+    return x;
+  y = 10;
+  return x + y;
+}
+
+print buz(4); // 4
+print buz(5); // 15

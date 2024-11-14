@@ -1,0 +1,16 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+func (x): myprint {
+  print x;
+}
+
+b = func(n): print_if_gt_5 {
+  if (n > 5)
+    myprint(n);
+  else
+    myprint(0);
+};
+
+b(6);
+b(3);

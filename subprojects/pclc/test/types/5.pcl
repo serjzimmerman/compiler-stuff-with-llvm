@@ -1,0 +1,3 @@
+// RUN: pclc %s | tee %t.stdout
+
+a = func (int x, int func (int,  int func (int, int)) bar): foo { return 1; }

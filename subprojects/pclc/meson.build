@@ -19,3 +19,7 @@ pclc_headers_dep = declare_dependency(
 )
 
 subdir('src')
+
+if get_option('tests')
+    subdir('test')
+endif

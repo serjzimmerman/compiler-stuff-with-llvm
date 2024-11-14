@@ -1,0 +1,11 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+x = 3;
+y = 4;
+
+x + y;
+
+t = {x + y;}
+
+print t;

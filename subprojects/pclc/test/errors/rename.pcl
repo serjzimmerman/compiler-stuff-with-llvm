@@ -1,0 +1,7 @@
+// RUN: not pclc %s
+
+func() : test {
+  return 1;
+}
+
+test = test;

@@ -1,0 +1,12 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+func (x, int func (int) op): transparent {
+  return op(x);
+}
+
+increment = func (x) {
+  return x + 1;
+}
+
+print transparent (2, increment);

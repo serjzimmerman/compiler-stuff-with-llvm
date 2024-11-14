@@ -1,3 +1,6 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
 func(x) : rfib1 {
   res = 0;
 

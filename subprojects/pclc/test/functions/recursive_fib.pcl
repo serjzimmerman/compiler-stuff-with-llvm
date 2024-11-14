@@ -1,0 +1,14 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+func(int x) : rfib {
+  int res = 0;
+  if (x <= 1) return x;
+  res = rfib(x - 1) + rfib(x - 2);
+  return res;
+}
+
+while (1) {
+  int x = ?;
+  if (x < 0) return;
+  print rfib(x);
+}

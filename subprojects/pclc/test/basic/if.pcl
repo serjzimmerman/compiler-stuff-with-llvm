@@ -1,0 +1,14 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+if (5 < 0) {
+  print 0;
+} else {
+  print 1; // Here we print 1
+}
+
+if (0 >= 0) {
+  print 0; // Here we print 0
+} else {
+  print 1;
+}

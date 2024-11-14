@@ -1,0 +1,18 @@
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+import os
+
+# NOTE: This is necessary to silence reportUndefinedVariable error for `config`
+# and `lit_config` global variables.
+# https://stackoverflow.com/questions/72824417/ignoring-a-specific-undefined-variable-with-pyright
+if TYPE_CHECKING:
+    config: Any = None
+    lit_config: Any = None
+
+config.test_source_root = r"@test_source_root@"
+config.test_exec_root = r"@test_build_root@"
+config.environment["PATH"] = os.pathsep.join(
+    [str(Path("@pclc_binary@").parent), config.environment["PATH"]],
+)
+
+lit_config.load_config(config, str(Path(config.test_source_root) / "cfg.lit.py"))

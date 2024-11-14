@@ -1,0 +1,8 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+func() : return1 { return 1; };
+func() : return2 { 2; };
+
+print return1();
+print return2();

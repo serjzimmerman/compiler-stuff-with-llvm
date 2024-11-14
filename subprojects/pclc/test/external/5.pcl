@@ -1,0 +1,9 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+// COM: https://github.com/BiscuitsLayer/ParaCL
+
+i = 10;
+while (i != 0) {
+  print i;
+  i = i - 1;
+}

@@ -1,0 +1,13 @@
+// RUN: not pclc %s | tee %t.stdout
+
+a = {
+  b = {
+    c = 1;
+    d = 2;
+    return c + d;
+  }
+  foo = func () {return 1;}
+  return foo; //return int func ()
+  return b; //return int
+}
+print a;

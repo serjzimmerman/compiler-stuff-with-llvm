@@ -1,0 +1,12 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+fact = func (x) : factorial {
+  if (x == 1)
+    return 1;
+  b = 1;
+  b = x * factorial(x - 1);
+  return b;
+}
+
+print fact (?);

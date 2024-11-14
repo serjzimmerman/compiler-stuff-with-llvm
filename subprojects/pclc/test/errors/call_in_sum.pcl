@@ -1,0 +1,22 @@
+// RUN: not pclc %s | FileCheck %s
+
+func (): foo {
+  return 1;
+}
+
+func (): bar {
+  return 2;
+}
+
+func (a): buz {
+  a = foo(a) + bar(5, 9);
+# CHECK: call_in_sum.pcl:12.16-24: Call parameter type/count mismatch
+# CHECK-NEXT: 12 |      a = foo(a) + bar(5, 9);
+# CHECK-NEXT:                    ~~~~^~~~~
+  return a;
+}
+
+func (): biz {
+  foo = func() { return 3; }
+  return foo();
+}

@@ -1,0 +1,8 @@
+// RUN: not pclc %s | FileCheck %s
+
+a = 3;
+print a();
+
+// CHECK: call_of_int.pcl:4.7-9: Call parameter type/count mismatch
+// CHEKC-NEXT: 4 |     print a();
+// CHEKC-NEXT:           ~~~~^~~~~

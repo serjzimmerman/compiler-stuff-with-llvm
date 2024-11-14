@@ -1,0 +1,17 @@
+// RUN: not pclc %s | tee %t.stdout
+
+print a = 5;
+b = ?;
+
+// Check comments and error message location
+while (c = 1) {
+  print a;
+  print c;
+  print d;
+  $$;
+}
+
+print c;
+
+// Mismatched parenthesis
+if (() {hello;}

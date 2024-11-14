@@ -1,0 +1,18 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+a = func() : first {
+  b = func() : second1 {
+    return 1;
+  };
+
+  print 2;
+  return b();
+};
+
+func() : third {
+  int res = first();
+  return res;
+};
+
+print third();

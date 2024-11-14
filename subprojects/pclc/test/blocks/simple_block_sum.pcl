@@ -1,0 +1,5 @@
+// RUN: pclc %s | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+
+c = {{{{1;} + {2;} + { return 0;};};};};
+print c;

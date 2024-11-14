@@ -15,6 +15,7 @@
   bison,
   llvmPackages,
   bash,
+  lit,
 }:
 
 let
@@ -54,6 +55,8 @@ llvmPackages.stdenv.mkDerivation (finalAttrs: {
     rustToolchain
     flex
     bison
+    lit
+    llvmPackages.llvm
   ];
 
   buildInputs = [

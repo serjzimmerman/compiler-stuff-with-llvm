@@ -1,0 +1,12 @@
+// RUN: pclc %s < %s.in | tee %t.stdout
+// RUN: diff -Z %t.stdout %s.ans
+// COM: https://github.com/BiscuitsLayer/ParaCL
+
+temp = 5;
+temp = 0;
+
+if (temp + 5 / ?) {
+  print 1000;
+}
+
+print 100;
