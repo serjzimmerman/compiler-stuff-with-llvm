@@ -37,6 +37,7 @@
       perSystem =
         {
           pkgs,
+          lib,
           self',
           ...
         }:
@@ -63,11 +64,16 @@
                 llvmPackages = pkgs.llvmPackages_18;
               };
               cswl-everything = default;
+              cswl-everything-static = default.overrideAttrs (prevAttrs: {
+                mesonFlags = prevAttrs.mesonFlags ++ [
+                  (lib.mesonOption "default_library" "static")
+                ];
+              });
               inherit rustToolchain;
             };
 
           checks = {
-            inherit (self'.packages) cswl-sim cswl-everything;
+            inherit (self'.packages) cswl-sim cswl-everything cswl-everything-static;
           };
         };
     };

@@ -22,7 +22,7 @@ scanner_generated = custom_target(
     ],
 )
 
-pclc_frontend = static_library(
+pclc_frontend = library(
     'pclc_frontend',
     [
         'ast_copier.cpp',
@@ -34,6 +34,7 @@ pclc_frontend = static_library(
     ],
     dependencies: [pclc_headers_dep],
     link_args: ['-lfl'],
+    install: true,
 )
 
 pclc_frontend_headers = [
