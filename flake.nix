@@ -37,9 +37,10 @@
       perSystem =
         {
           pkgs,
+          self',
           ...
         }:
-        rec {
+        {
           packages =
             let
               # https://www.github.com/oxalica/rust-overlay/issues/70#issuecomment-1153789106
@@ -53,13 +54,20 @@
                 rustc = rustToolchain;
               };
             in
-            {
+            rec {
               cswl-sim = pkgs.callPackage ./cswl-sim {
                 inherit rustPlatform;
               };
-              default = packages.cswl-sim;
+              default = pkgs.callPackage ./. {
+                inherit rustToolchain rustPlatform;
+              };
+              cswl-everything = default;
               inherit rustToolchain;
             };
+
+          checks = {
+            inherit (self'.packages) cswl-sim cswl-everything;
+          };
         };
     };
 }
