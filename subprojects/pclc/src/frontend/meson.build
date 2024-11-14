@@ -42,4 +42,7 @@ pclc_frontend_headers = [
     scanner_generated.to_list()[1],
 ]
 
-pclc_frontend_dep = declare_dependency(link_with: pclc_frontend)
+pclc_frontend_dep = declare_dependency(
+    link_with: pclc_frontend,
+    dependencies: pclc_headers_dep,
+)

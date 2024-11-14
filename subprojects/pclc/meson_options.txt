@@ -6,3 +6,11 @@ option(
     description: 'Enable or disable tests',
 )
 
+option(
+    'compiler_backend',
+    type: 'combo',
+    choices: ['vm', 'llvm'],
+    value: 'vm',
+    yield: true,
+    description: 'Choose which backend to use for the compiler',
+)
