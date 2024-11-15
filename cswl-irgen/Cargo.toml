@@ -16,4 +16,4 @@ llvm12-0 = ["inkwell/llvm12-0"]
 
 [dependencies]
 inkwell = "0.5"
-cswl-sim = { path = "../cswl-sim" }
+cswl-sim = { path = "../subprojects/cswl-sim" }

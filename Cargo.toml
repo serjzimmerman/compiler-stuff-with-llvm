@@ -1,3 +1,8 @@
 [workspace]
-members = ["cswl-sim", "cswl-pass", "cswl-pass-logger", "cswl-irgen"]
+members = [
+  "subprojects/cswl-sim",
+  "cswl-pass",
+  "cswl-pass-logger",
+  "cswl-irgen",
+]
 resolver = "2"

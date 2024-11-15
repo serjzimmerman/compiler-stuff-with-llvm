@@ -78,7 +78,7 @@ llvmPackages.stdenv.mkDerivation (finalAttrs: {
       cp -r ${popl} subprojects/${poplDir}
       chmod 0755 subprojects/${poplDir}
       cp subprojects/packagefiles/${poplDir}/meson.build subprojects/${poplDir}
-      substituteInPlace cswl-sim/scripts/build_cargo.sh \
+      substituteInPlace subprojects/cswl-sim/scripts/build_cargo.sh \
         --replace-fail '/usr/bin/env bash' '${lib.getExe bash}'
     '';
 
