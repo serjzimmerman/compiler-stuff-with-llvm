@@ -18,5 +18,5 @@ test(
     'pclc.lit',
     lit_executable,
     args: ['--succinct', '--verbose', fs.parent(lit_site_cfg.full_path())],
-    depends: [pclc, pcldis, pclvm],
+    depends: pclc_tools,
 )

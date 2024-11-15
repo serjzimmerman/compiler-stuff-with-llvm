@@ -34,6 +34,7 @@
               flex
               bison
               lit
+              xdot
             ];
           }).overrideAttrs
             { allowSubstitutes = false; };

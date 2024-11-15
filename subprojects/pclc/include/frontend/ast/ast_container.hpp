@@ -39,9 +39,10 @@ private:
 public:
   ast_container() = default;
 
+#if 1
   ast_container(const ast_container &other) {
     ast_container temp;
-    auto root_ptr = ast_copy(other.get_root_ptr(), temp);
+    auto *root_ptr = ast_copy(other.get_root_ptr(), temp);
     temp.set_root_ptr(root_ptr);
     *this = std::move(temp);
   }
@@ -53,6 +54,10 @@ public:
     *this = std::move(temp);
     return *this;
   }
+#else
+  ast_container(const ast_container &other) = delete;
+  ast_container &operator=(const ast_container &other) = delete;
+#endif
 
   ast_container(ast_container &&other) = default;
   ast_container &operator=(ast_container &&other) = default;

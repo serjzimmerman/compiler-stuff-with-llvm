@@ -113,7 +113,6 @@ public:
     function_explorer explorer;
 
     explorer.explore(ast, m_functions, errors);
-    auto scheduled = graphs::recursive_topo_sort(m_functions.usegraph);
 
     semantic_analyzer analyzer{m_functions};
     analyzer.set_error_queue(errors);
@@ -126,6 +125,8 @@ public:
 
     return errors.empty();
   }
+
+  auto get_filename() const { return m_source.get_filename(); }
 };
 
 } // namespace paracl::frontend

@@ -48,6 +48,8 @@ public:
     fill_lines();
   }
 
+  auto get_filename() const -> std::string const { return *m_filename; }
+
   std::string_view getline(unsigned i) const & {
     assert(i != 0 && "Line number can't be equal to 1");
     return m_file_lines.at(

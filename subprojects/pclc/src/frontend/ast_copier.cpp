@@ -112,7 +112,7 @@ function_call &ast_copier::copy(const function_call &ref) {
   auto &copy =
       m_container.make_node<function_call>(std::string{ref.name()}, ref.loc());
 
-  for (const auto v : ref) {
+  for (const auto *v : ref) {
     copy.append_parameter(&copy_expr(*v));
   }
 

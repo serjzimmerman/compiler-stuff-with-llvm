@@ -69,6 +69,7 @@ public:
 
   symtab &param_symtab() { return param_stab; }
   i_ast_node &body() const { return *m_block; }
+  bool is_anonymous() const { return !name.has_value(); }
 };
 
 class function_definition_to_ptr_conv final : public i_expression {

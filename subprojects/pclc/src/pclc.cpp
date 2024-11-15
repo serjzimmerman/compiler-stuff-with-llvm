@@ -9,7 +9,16 @@
 #include "frontend/dumper.hpp"
 #include "frontend/frontend_driver.hpp"
 
+#ifdef PCLC_VM_CODEGEN
 #include "codegen.hpp"
+#endif
+
+#ifdef PCLC_LLVM_CODEGEN
+#include "llvm_codegen/llvm_codegen.hpp"
+
+#include <llvm/Support/InitLLVM.h>
+#endif
+
 #include "common.hpp"
 
 #include <concepts>
@@ -36,6 +45,7 @@ int main(int argc, char *argv[]) try {
   auto disas_option = op.add<popl::Switch>(
       "d", "disas", "Disassemble generated code (does not run the program)",
       &dump_binary);
+  auto debug_option = op.add<popl::Switch>("", "debug", "Enable debug prints");
 
   op.parse(argc, argv);
 
@@ -65,24 +75,45 @@ int main(int argc, char *argv[]) try {
     return k_exit_failure;
   }
 
-  paracl::codegen::codegen_visitor generator;
-  generator.generate_all(drv.ast(), drv.functions());
-  auto ch = generator.to_chunk();
+#ifdef PCLC_VM_CODEGEN
+  auto handle_vm_codegen = [&]() {
+    paracl::codegen::codegen_visitor generator;
+    generator.generate_all(drv.ast(), drv.functions());
+    auto ch = generator.to_chunk();
 
-  if (dump_binary) {
-    disassemble_chunk(ch);
+    if (dump_binary) {
+      disassemble_chunk(ch);
+      return k_exit_success;
+    }
+
+    if (output_file_option->is_set()) {
+      std::string output_file_name = output_file_option->value();
+      std::ofstream output_file;
+      utils::try_open_file(output_file, output_file_name, std::ios::binary);
+      write_chunk(output_file, ch);
+      return k_exit_success;
+    }
+
+    execute_chunk(ch);
+
     return k_exit_success;
-  }
+  };
 
-  if (output_file_option->is_set()) {
-    std::string output_file_name = output_file_option->value();
-    std::ofstream output_file;
-    utils::try_open_file(output_file, output_file_name, std::ios::binary);
-    write_chunk(output_file, ch);
-    return k_exit_success;
-  }
+  return handle_vm_codegen();
+#endif
 
-  execute_chunk(ch);
+#ifdef PCLC_LLVM_CODEGEN
+  auto handle_llvm_codegen = [&]() {
+    auto llvm_init = llvm::InitLLVM(argc, argv);
+    auto ctx = llvm::LLVMContext();
+    auto module = paracl::llvm_codegen::emit_llvm_module(ctx, drv);
+
+    if (debug_option->is_set())
+      module->dump();
+  };
+
+  handle_llvm_codegen();
+#endif
 
 } catch (std::exception &e) {
   fmt::println(stderr, "Error: {}", e.what());

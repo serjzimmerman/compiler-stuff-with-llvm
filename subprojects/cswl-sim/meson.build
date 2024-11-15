@@ -36,3 +36,5 @@ if get_option('build_rust_deps')
         include_directories: include_directories('include'),
     )
 endif
+
+meson.override_dependency('cswl-sim', cswl_sim_dep)

@@ -166,6 +166,8 @@ public:
                m_builtin_type_tag;
   }
 
+  auto get_builtin_class() const { return m_builtin_type_tag; }
+
   std::string to_string() const override {
     return builtin_type_to_string(m_builtin_type_tag);
   }

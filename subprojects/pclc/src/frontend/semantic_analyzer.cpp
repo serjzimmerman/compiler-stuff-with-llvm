@@ -168,7 +168,7 @@ void semantic_analyzer::analyze_node(ast::statement_block &ref,
 
     assert(m_ast && "Nullptr in m_ast");
 
-    auto expr_ptr =
+    auto *expr_ptr =
         ezvis::visit_tuple<ast::i_expression *, ast::tuple_expression_nodes>(
             [](ast::i_expression &expr) { return &expr; }, st);
     auto &ret =
