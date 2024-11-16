@@ -27,6 +27,8 @@ int32_t read_int32() {
 }
 
 auto get_print_int32_function(llvm::Module &module) -> llvm::Function * {
+  if (auto *ptr = module.getFunction(print_int32_name))
+    return ptr;
   auto &ctx = module.getContext();
   auto *type = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx),
                                        {llvm::Type::getInt32Ty(ctx)},
@@ -36,6 +38,8 @@ auto get_print_int32_function(llvm::Module &module) -> llvm::Function * {
 }
 
 auto get_read_int32_function(llvm::Module &module) -> llvm::Function * {
+  if (auto *ptr = module.getFunction(read_int32_name))
+    return ptr;
   auto &ctx = module.getContext();
   auto *type =
       llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx), /*Params=*/{},
