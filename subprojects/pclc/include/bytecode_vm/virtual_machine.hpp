@@ -226,7 +226,7 @@ constexpr auto print_instr = print_desc >> [](auto &&ctx, auto &&) {
 };
 
 constexpr auto push_read = push_read_desc >> [](auto &&ctx, auto &&) {
-  int val;
+  int32_t val;
   std::cin >> val;
   ctx.push(val);
 };

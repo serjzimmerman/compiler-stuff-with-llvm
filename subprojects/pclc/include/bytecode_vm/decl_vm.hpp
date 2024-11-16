@@ -183,7 +183,7 @@ public:
 };
 
 template <typename> class virtual_machine;
-using execution_value_type = int;
+using execution_value_type = int32_t;
 
 template <typename t_desc> struct context {
   friend class virtual_machine<t_desc>;

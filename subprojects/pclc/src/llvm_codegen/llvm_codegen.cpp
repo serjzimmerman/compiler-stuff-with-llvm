@@ -8,6 +8,7 @@
 
 #include "ezvis/ezvis.hpp"
 
+#include "llvm_codegen/intrinsics.hpp"
 #include "llvm_codegen/llvm_codegen.hpp"
 
 #include "frontend/analysis/function_table.hpp"
@@ -33,11 +34,73 @@
 
 namespace paracl::llvm_codegen {
 
+class codegen_stack_scope {
+  using map_type = utils::transparent::string_unordered_map<llvm::Value *>;
+
+private:
+  map_type m_map;
+
+public:
+  codegen_stack_scope() = default;
+
+  std::optional<llvm::Value *> lookup(std::string_view name) const {
+    auto it = m_map.find(name);
+    return (it == m_map.end() ? std::nullopt : std::optional{it->second});
+  }
+
+  std::size_t size() const { return m_map.size(); }
+
+  void add_value(std::string_view name, llvm::Value *value) {
+    [[maybe_unused]] auto res = m_map.emplace(name, value);
+    assert(res.second && "Reinserting var with the same label");
+  }
+};
+
+class codegen_stack_frame {
+private:
+  std::vector<codegen_stack_scope> m_blocks;
+
+public:
+  void begin_scope() { m_blocks.emplace_back(); }
+
+  void end_scope() {
+    assert(m_blocks.size() && "Ending nonexistent scope");
+    m_blocks.pop_back();
+  }
+
+  void add_value(std::string_view name, llvm::Value *value) {
+    assert(m_blocks.size() && "Scope stack is empty");
+    auto &back = m_blocks.back();
+    back.add_value(name, value);
+  }
+
+  std::optional<llvm::Value *> lookup_value(std::string_view name) const {
+    llvm::Value *found_value = nullptr;
+
+    [[maybe_unused]] auto found =
+        std::find_if(m_blocks.crbegin(), m_blocks.crend(), [&](auto &block) {
+          auto found = block.lookup(name);
+          if (found)
+            found_value = *found;
+          return block.lookup(name).has_value();
+        });
+
+    return (found == m_blocks.crend() ? std::nullopt
+                                      : std::optional{found_value});
+  }
+
+  void clear() { m_blocks.clear(); }
+
+  const codegen_stack_scope &front() const & { return m_blocks.front(); }
+};
+
 class codegen_visitor final
-    : public ezvis::visitor_base<const ast::i_ast_node, codegen_visitor, void> {
+    : public ezvis::visitor_base<const ast::i_ast_node, codegen_visitor,
+                                 llvm::Value *> {
 private:
   std::unique_ptr<llvm::Module> m_module;
   std::unique_ptr<llvm::IRBuilder<>> m_builder;
+  codegen_stack_frame m_current_frame;
   std::unordered_map<const ast::i_expression *, llvm::Value *> m_value_map;
   std::unordered_map<const ast::function_definition *, llvm::Function *>
       m_function_defs;
@@ -47,6 +110,10 @@ private:
 
 private:
   auto ctx() const & -> llvm::LLVMContext & { return m_module->getContext(); }
+  auto frame() & -> codegen_stack_frame & { return m_current_frame; }
+  auto frame() const & -> const codegen_stack_frame & {
+    return m_current_frame;
+  }
 
   auto &global_stab() const & {
     assert(m_functions->global_stab);
@@ -56,32 +123,20 @@ private:
   void generate_function_declarations();
   void declarate_global_values();
 
-  void visit_if_no_else(const ast::if_statement &);
-  void visit_if_with_else(const ast::if_statement &);
-
   void set_current_function(llvm::Function *func) { m_current_function = func; }
   auto *get_current_function() const { return m_current_function; }
 
   auto get_main_function() const -> llvm::Function * { return m_main_function; }
 
-  void map_ast_to_value(const ast::i_expression &node, llvm::Value *val) {
-    [[maybe_unused]] auto [_, inserted] = m_value_map.insert({&node, val});
-    assert(inserted);
-  }
-
-  auto lookup_value(const ast::i_expression &node) const -> llvm::Value * {
-    return m_value_map.at(&node);
-  }
-
-  auto get_value(const ast::i_expression &node) const -> llvm::Value *;
+  auto get_llvm_type(const frontend::types::i_type &type,
+                     bool is_function_decl = false) const -> llvm::Type *;
 
 private:
-  using to_visit = std::tuple<
-      ast::assignment_statement, ast::binary_expression,
-      ast::constant_expression, ast::if_statement, ast::print_statement,
-      ast::read_expression, ast::statement_block, ast::unary_expression,
-      ast::variable_expression, ast::while_statement, ast::function_call,
-      ast::return_statement, ast::function_definition_to_ptr_conv>;
+  using to_visit = std::tuple<ast::assignment_statement, ast::binary_expression,
+                              ast::constant_expression, ast::print_statement,
+                              ast::read_expression, ast::statement_block,
+                              ast::unary_expression, ast::variable_expression,
+                              ast::return_statement>;
 
 public:
   EZVIS_VISIT_CT(to_visit);
@@ -92,19 +147,23 @@ public:
         m_builder(std::make_unique<llvm::IRBuilder<>>(ctx)),
         m_functions(&drv.functions()) {}
 
-  void generate(const ast::assignment_statement &);
   auto generate(const ast::binary_expression &) -> llvm::Value *;
-  void generate(const ast::constant_expression &);
-  void generate(const ast::if_statement &);
-  void generate(const ast::print_statement &);
-  void generate(const ast::read_expression &);
-  void generate(const ast::statement_block &, bool global_scope = false);
-  void generate(const ast::unary_expression &);
-  void generate(const ast::variable_expression &);
-  void generate(const ast::while_statement &);
-  void generate(const ast::function_call &);
-  void generate(const ast::return_statement &);
-  void generate(const ast::function_definition_to_ptr_conv &);
+  auto generate(const ast::unary_expression &) -> llvm::Value *;
+  auto generate(const ast::variable_expression &) -> llvm::Value *;
+  auto generate(const ast::return_statement &) -> llvm::Instruction *;
+
+  /// @return Pointer to the right-hand-side of the assignment.
+  auto generate(const ast::assignment_statement &) -> llvm::Value *;
+
+  auto generate(const ast::constant_expression &) -> llvm::Value *;
+  auto generate(const ast::print_statement &) -> llvm::Instruction *;
+  auto generate(const ast::read_expression &) -> llvm::Value *;
+
+  /// @return Always nullptr
+  /// TODO: Maybe there should be a separate expression visitor to avoid dummy
+  /// return values?
+  auto generate(const ast::statement_block &,
+                bool global_scope = false) -> llvm::Value *;
 
   EZVIS_VISIT_INVOKER(generate);
 
@@ -118,33 +177,33 @@ public:
   }
 };
 
-static auto get_llvm_type(llvm::LLVMContext &ctx,
-                          const frontend::types::i_type &type,
-                          bool is_function_decl = false) -> llvm::Type * {
+auto codegen_visitor::get_llvm_type(const frontend::types::i_type &type,
+                                    bool is_function_decl) const
+    -> llvm::Type * {
   using namespace frontend::types;
 
   return ezvis::visit<llvm::Type *, type_composite_function, type_builtin>(
       utils::visitors{
           [&](const type_composite_function &func) {
-            auto *return_type = get_llvm_type(ctx, func.return_type());
+            auto *return_type = get_llvm_type(func.return_type());
             auto args_types = std::vector<llvm::Type *>{};
             args_types.reserve(func.size());
             std::transform(
                 func.cbegin(), func.cend(), std::back_inserter(args_types),
                 [&](const auto &type) {
-                  return get_llvm_type(ctx, type, /*is_function_decl=*/false);
+                  return get_llvm_type(type, /*is_function_decl=*/false);
                 });
             auto *func_type =
                 llvm::FunctionType::get(return_type, args_types, false);
             return is_function_decl ? static_cast<llvm::Type *>(func_type)
-                                    : func_type->getPointerTo();
+                                    : llvm::PointerType::get(ctx(), 0);
           },
           [&](const type_builtin &type) -> llvm::Type * {
             switch (type.get_builtin_class()) {
             case builtin_type_class::E_BUILTIN_INT:
-              return llvm::Type::getInt32Ty(ctx);
+              return llvm::Type::getInt32Ty(ctx());
             case builtin_type_class::E_BUILTIN_VOID:
-              return llvm::Type::getVoidTy(ctx);
+              return llvm::Type::getVoidTy(ctx());
             }
           }},
       type);
@@ -165,7 +224,7 @@ void codegen_visitor::generate_function_declarations() {
 
     auto function_type = func->type;
     auto *llvm_function_type = llvm::cast<llvm::FunctionType>(
-        get_llvm_type(ctx(), function_type, /*is_function_decl=*/true));
+        get_llvm_type(function_type, /*is_function_decl=*/true));
     auto function_name_or_none = func->name;
 
     auto *llvm_function = llvm::Function::Create(
@@ -185,42 +244,31 @@ void codegen_visitor::generate_function_declarations() {
 void codegen_visitor::declarate_global_values() {
   auto &globals = global_stab();
 
+  frame().begin_scope();
+
   for (auto &[name, attrs] : globals) {
     auto *def = attrs.m_definition;
     assert(def);
-    auto *type = get_llvm_type(ctx(), def->type, /*is_function_decl=*/false);
+    auto *type = get_llvm_type(def->type);
     assert(type);
     // NOTE: This does not leak memory. The module takes ownership of this
     // pointer.
+    // TODO: Find a better API to construct global variables. There should be
+    // something better than this.
     [[maybe_unused]] auto *gv = new llvm::GlobalVariable(
         *m_module, type, /*isConstant=*/false,
         llvm::GlobalVariable::ExternalLinkage,
         /*Initializer=*/llvm::Constant::getNullValue(type),
         /*Name=*/name);
-    map_ast_to_value(*def, gv);
+
+    frame().add_value(name, gv);
   }
-}
-
-auto codegen_visitor::get_value(const ast::i_expression &node) const
-    -> llvm::Value * {
-  auto node_type = ast::identify_node(node);
-
-  if (node_type == ast::ast_node_type::E_VARIABLE_EXPRESSION) {
-    auto *llvm_type =
-        get_llvm_type(ctx(), node.type, /*is_function_decl=*/false);
-
-    auto *ptr_value = lookup_value(node);
-    assert(ptr_value->getType()->isPointerTy());
-    return m_builder->CreateLoad(llvm_type, lookup_value(node));
-  }
-
-  return lookup_value(node);
 }
 
 void codegen_visitor::generate_function(llvm::Function *llvm_func,
                                         const ast::i_ast_node &entry_point) {
-  set_current_function(llvm_func);
   assert(llvm_func);
+  set_current_function(llvm_func);
   auto *entry_block = llvm::BasicBlock::Create(ctx(), "", llvm_func);
   assert(entry_block);
   m_builder->SetInsertPoint(entry_block);
@@ -243,26 +291,25 @@ void codegen_visitor::generate_all(const ast::ast_container &ast) {
   }
 }
 
-void codegen_visitor::generate(const ast::assignment_statement &ref) {
-  apply(ref.right());
-  auto *value_to_store = get_value(ref.right());
+auto codegen_visitor::generate(const ast::assignment_statement &ref)
+    -> llvm::Value * {
+  auto *value_to_store = apply(ref.right());
 
   for (auto start = ref.rbegin(), finish = ref.rend(); start != finish;
        ++start) {
-    generate(*start);
-    m_builder->CreateStore(value_to_store, lookup_value(*start));
+    m_builder->CreateStore(value_to_store,
+                           frame().lookup_value(start->name()).value());
   }
+
+  return value_to_store;
 }
 
 auto codegen_visitor::generate(const ast::binary_expression &ref)
     -> llvm::Value * {
   using bin_op = ast::binary_operation;
 
-  apply(ref.left());
-  apply(ref.right());
-
-  auto *lhs = get_value(ref.left());
-  auto *rhs = get_value(ref.right());
+  auto *lhs = apply(ref.left());
+  auto *rhs = apply(ref.right());
 
   llvm::Value *result = [&]() -> llvm::Value * {
     switch (ref.op_type()) {
@@ -297,31 +344,49 @@ auto codegen_visitor::generate(const ast::binary_expression &ref)
     }
   }();
 
-  map_ast_to_value(ref, result);
-
   return result;
 }
 
-void codegen_visitor::generate(const ast::constant_expression &constant) {
+auto codegen_visitor::generate(const ast::constant_expression &constant)
+    -> llvm::Value * {
   auto ap_int = llvm::APInt(32, constant.value());
-  auto *value = llvm::Constant::getIntegerValue(
-      get_llvm_type(ctx(), constant.type), ap_int);
-  map_ast_to_value(constant, value);
+  return llvm::Constant::getIntegerValue(get_llvm_type(constant.type), ap_int);
 }
 
-void codegen_visitor::generate(const ast::if_statement &) {}
+auto codegen_visitor::generate(const ast::print_statement &ref)
+    -> llvm::Instruction * {
+  auto *value = apply(ref.expr());
+  return m_builder->CreateCall(intrinsics::get_print_int32_function(*m_module),
+                               {value});
+}
 
-void codegen_visitor::generate(const ast::print_statement &) {}
+auto codegen_visitor::generate(const ast::read_expression &) -> llvm::Value * {
+  return m_builder->CreateCall(intrinsics::get_read_int32_function(*m_module),
+                               /*Args=*/{});
+}
 
-void codegen_visitor::generate(const ast::read_expression &) {}
-
-void codegen_visitor::generate(const ast::statement_block &block,
-                               bool global_scope) {
+auto codegen_visitor::generate(const ast::statement_block &block,
+                               bool global_scope) -> llvm::Value * {
   if (global_scope) {
     set_current_function(get_main_function());
     auto *entry_block =
         llvm::BasicBlock::Create(ctx(), "", get_main_function());
     m_builder->SetInsertPoint(entry_block);
+    auto *last_ret = m_builder->CreateRet(llvm::Constant::getIntegerValue(
+        llvm::Type::getInt32Ty(ctx()), llvm::APInt(32, 0)));
+    m_builder->SetInsertPoint(last_ret);
+  }
+
+  if (!global_scope) {
+    frame().begin_scope();
+
+    for (auto &[name, attrs] : block.stab) {
+      auto *variable_def = attrs.m_definition;
+      assert(variable_def);
+      auto *llvm_value =
+          m_builder->CreateAlloca(get_llvm_type(variable_def->type));
+      frame().add_value(name, llvm_value);
+    }
   }
 
   for (const auto *st : block) {
@@ -331,27 +396,49 @@ void codegen_visitor::generate(const ast::statement_block &block,
     if (node_type != ast::ast_node_type::E_FUNCTION_DEFINITION)
       apply(*st);
   }
+
+  frame().end_scope();
+
+  return nullptr;
 }
 
-void codegen_visitor::generate(const ast::unary_expression &) {}
+auto codegen_visitor::generate(const ast::unary_expression &ref)
+    -> llvm::Value * {
+  using unary_op = ast::unary_operation;
 
-void codegen_visitor::generate(const ast::variable_expression &ref) {
-  if (m_value_map.contains(&ref))
-    return;
+  auto *op = apply(ref.expr());
+  assert(op);
 
-  auto *val = m_builder->CreateAlloca(
-      get_llvm_type(ctx(), ref.type, /*is_function_decl=*/false));
+  llvm::Value *result = [&]() -> llvm::Value * {
+    switch (ref.op_type()) {
+    case unary_op::E_UN_OP_NEG:
+      return m_builder->CreateNeg(op);
+    case unary_op::E_UN_OP_NOT:
+      return m_builder->CreateNot(op);
+    case unary_op::E_UN_OP_POS:
+      return op;
+    default:
+      std::terminate();
+    }
+  }();
 
-  map_ast_to_value(ref, val);
+  return result;
 }
 
-void codegen_visitor::generate(const ast::while_statement &) {}
+auto codegen_visitor::generate(const ast::variable_expression &ref)
+    -> llvm::Value * {
+  auto *llvm_type = get_llvm_type(ref.type);
+  auto *ptr_value = frame().lookup_value(ref.name()).value();
+  assert(ptr_value->getType()->isPointerTy());
+  return m_builder->CreateLoad(llvm_type, ptr_value);
+}
 
-void codegen_visitor::generate(const ast::function_call &) {}
-
-void codegen_visitor::generate(const ast::return_statement &) {}
-
-void codegen_visitor::generate(const ast::function_definition_to_ptr_conv &) {}
+auto codegen_visitor::generate(const ast::return_statement &ref)
+    -> llvm::Instruction * {
+  auto *op = apply(ref.expr());
+  assert(op);
+  return m_builder->CreateRet(op);
+}
 
 auto emit_llvm_module(llvm::LLVMContext &ctx,
                       const frontend::frontend_driver &drv)

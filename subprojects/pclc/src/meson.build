@@ -35,7 +35,7 @@ if get_option('compiler_backend') == 'llvm'
         'llvm',
         version: '>=18.0',
         method: 'auto',
-        modules: ['core', 'support', 'option'],
+        modules: ['core', 'support', 'option', 'executionengine'],
         required: true,
         static: static_llvm,
     )

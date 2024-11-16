@@ -75,13 +75,6 @@ public:
 
 class codegen_stack_frame {
 private:
-  using map_type = utils::transparent::string_unordered_map<unsigned>;
-
-  struct stack_block {
-    unsigned m_top;
-    map_type m_map;
-  };
-
   std::vector<codegen_stack_block> m_blocks;
 
 public:

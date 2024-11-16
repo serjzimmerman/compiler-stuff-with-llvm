@@ -14,8 +14,11 @@
 #endif
 
 #ifdef PCLC_LLVM_CODEGEN
+#include "llvm_codegen/intrinsics.hpp"
 #include "llvm_codegen/llvm_codegen.hpp"
 
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/Support/InitLLVM.h>
 #endif
 
@@ -104,12 +107,30 @@ int main(int argc, char *argv[]) try {
 
 #ifdef PCLC_LLVM_CODEGEN
   auto handle_llvm_codegen = [&]() {
-    auto llvm_init = llvm::InitLLVM(argc, argv);
+    using namespace paracl::llvm_codegen;
+
+    LLVMInitializeNativeTarget();
+    LLVMInitializeNativeAsmPrinter();
+
+    auto llvm_shutdown = std::unique_ptr<void *, decltype([](auto *) {
+                                           llvm::llvm_shutdown();
+                                         })>(nullptr, {});
+
     auto ctx = llvm::LLVMContext();
-    auto module = paracl::llvm_codegen::emit_llvm_module(ctx, drv);
+    auto owning_module = emit_llvm_module(ctx, drv);
+    auto &module_ref = *owning_module;
 
     if (debug_option->is_set())
-      module->dump();
+      module_ref.dump();
+
+    auto engine = std::unique_ptr<llvm::ExecutionEngine>(
+        llvm::EngineBuilder(std::move(owning_module)).create());
+
+    assert(engine);
+
+    intrinsics::add_intrinsics_mapping(*engine);
+    engine->finalizeObject();
+    engine->runFunction(module_ref.getFunction("main"), {});
   };
 
   handle_llvm_codegen();

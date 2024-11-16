@@ -6,26 +6,22 @@
 //                                               /_/                          //
 // -- This code is licensed under GPLv3 license (see LICENSE for details) --- //
 
-#pragma once
-
-#include "i_ast_node.hpp"
-
 #include <cstdint>
 
-namespace paracl::frontend::ast {
+namespace llvm {
+class ExecutionEngine;
+class Module;
+class Function;
+} // namespace llvm
 
-class constant_expression
-    : public i_expression { // Inherit from i_expression but dont pass trivial
-                            // builtin type by shared ptr. Should fix in the
-                            // future
-  int32_t m_val;
+namespace paracl::llvm_codegen::intrinsics {
 
-  EZVIS_VISITABLE();
+void print_int32(int32_t value);
+int32_t read_int32();
 
-public:
-  constant_expression(int p_val, location l)
-      : i_expression{l, types::type_builtin::type_int}, m_val{p_val} {}
-  int32_t value() const { return m_val; }
-};
+void add_intrinsics_mapping(llvm::ExecutionEngine &engine);
 
-} // namespace paracl::frontend::ast
+auto get_print_int32_function(llvm::Module &module) -> llvm::Function *;
+auto get_read_int32_function(llvm::Module &module) -> llvm::Function *;
+
+} // namespace paracl::llvm_codegen::intrinsics
