@@ -486,7 +486,9 @@ auto codegen_visitor::generate(const ast::if_statement &ref) -> llvm::Value * {
 
   auto *cond_value = apply(ref.cond());
   assert(cond_value);
-  m_builder->CreateCondBr(cond_value, then_block,
+  auto *bool_cond_value = cond_value = m_builder->CreateIsNotNull(cond_value);
+
+  m_builder->CreateCondBr(bool_cond_value, then_block,
                           else_block ? else_block : cont_block);
 
   m_builder->SetInsertPoint(then_block);
@@ -522,7 +524,8 @@ auto codegen_visitor::generate(const ast::while_statement &ref)
   m_builder->SetInsertPoint(cond_block);
   auto *cond_value = apply(ref.cond());
   assert(cond_value);
-  m_builder->CreateCondBr(cond_value, body_block, exit_block);
+  auto *bool_cond_value = cond_value = m_builder->CreateIsNotNull(cond_value);
+  m_builder->CreateCondBr(bool_cond_value, body_block, exit_block);
 
   m_builder->SetInsertPoint(body_block);
   apply(ref.block());
