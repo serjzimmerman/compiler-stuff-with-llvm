@@ -486,7 +486,8 @@ auto codegen_visitor::generate(const ast::if_statement &ref) -> llvm::Value * {
 
   auto *cond_value = apply(ref.cond());
   assert(cond_value);
-  m_builder->CreateCondBr(cond_value, then_block, else_block);
+  m_builder->CreateCondBr(cond_value, then_block,
+                          else_block ? else_block : cont_block);
 
   m_builder->SetInsertPoint(then_block);
   apply(ref.true_block());
