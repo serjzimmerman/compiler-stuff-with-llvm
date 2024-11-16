@@ -131,12 +131,19 @@ private:
   auto get_llvm_type(const frontend::types::i_type &type,
                      bool is_function_decl = false) const -> llvm::Type *;
 
+  void begin_scope(const frontend::symtab &stab);
+
+  auto create_block(std::string_view name = "") -> llvm::BasicBlock * {
+    return llvm::BasicBlock::Create(ctx(), name, get_current_function());
+  };
+
 private:
-  using to_visit = std::tuple<ast::assignment_statement, ast::binary_expression,
-                              ast::constant_expression, ast::print_statement,
-                              ast::read_expression, ast::statement_block,
-                              ast::unary_expression, ast::variable_expression,
-                              ast::return_statement, ast::function_call>;
+  using to_visit =
+      std::tuple<ast::assignment_statement, ast::binary_expression,
+                 ast::constant_expression, ast::print_statement,
+                 ast::read_expression, ast::statement_block,
+                 ast::unary_expression, ast::variable_expression,
+                 ast::return_statement, ast::function_call, ast::if_statement>;
 
 public:
   EZVIS_VISIT_CT(to_visit);
@@ -164,6 +171,9 @@ public:
   /// return values?
   auto generate(const ast::statement_block &,
                 bool global_scope = false) -> llvm::Value *;
+
+  /// @return Always nullptr
+  auto generate(const ast::if_statement &) -> llvm::Value *;
 
   EZVIS_VISIT_INVOKER(generate);
 
@@ -368,26 +378,15 @@ auto codegen_visitor::generate(const ast::read_expression &) -> llvm::Value * {
 auto codegen_visitor::generate(const ast::statement_block &block,
                                bool global_scope) -> llvm::Value * {
   if (global_scope) {
+    // NOTE: Special handling of the global scope.
     set_current_function(get_main_function());
     auto *entry_block =
-        llvm::BasicBlock::Create(ctx(), "", get_main_function());
+        llvm::BasicBlock::Create(ctx(), "entry", get_main_function());
     m_builder->SetInsertPoint(entry_block);
-    auto *last_ret = m_builder->CreateRet(llvm::Constant::getIntegerValue(
-        llvm::Type::getInt32Ty(ctx()), llvm::APInt(32, 0)));
-    m_builder->SetInsertPoint(last_ret);
   }
 
-  if (!global_scope) {
-    frame().begin_scope();
-
-    for (auto &[name, attrs] : block.stab) {
-      auto *variable_def = attrs.m_definition;
-      assert(variable_def);
-      auto *llvm_value =
-          m_builder->CreateAlloca(get_llvm_type(variable_def->type));
-      frame().add_value(name, llvm_value);
-    }
-  }
+  if (!global_scope)
+    begin_scope(block.stab);
 
   for (const auto *st : block) {
     assert(st);
@@ -395,6 +394,11 @@ auto codegen_visitor::generate(const ast::statement_block &block,
     const auto node_type = frontend::ast::identify_node(st);
     if (node_type != ast::ast_node_type::E_FUNCTION_DEFINITION)
       apply(*st);
+  }
+
+  if (global_scope) {
+    m_builder->CreateRet(llvm::Constant::getIntegerValue(
+        llvm::Type::getInt32Ty(ctx()), llvm::APInt(32, 0)));
   }
 
   frame().end_scope();
@@ -465,6 +469,49 @@ auto codegen_visitor::generate(const ast::function_call &ref) -> llvm::Value * {
 
   return m_builder->CreateCall(func_type,
                                frame().lookup_value(ref.name()).value());
+}
+
+auto codegen_visitor::generate(const ast::if_statement &ref) -> llvm::Value * {
+  auto *then_block = create_block("then");
+  auto *else_block = ref.else_block() ? create_block("else") : nullptr;
+  auto *cont_block = create_block("cont");
+
+  assert(then_block);
+  assert(cont_block);
+
+  begin_scope(ref.control_block_symtab);
+
+  auto *cond_value = apply(ref.cond());
+  assert(cond_value);
+  m_builder->CreateCondBr(cond_value, then_block, else_block);
+
+  m_builder->SetInsertPoint(then_block);
+  apply(ref.true_block());
+  m_builder->CreateBr(cont_block);
+
+  if (else_block) {
+    m_builder->SetInsertPoint(else_block);
+    apply(*ref.else_block());
+    m_builder->CreateBr(cont_block);
+  }
+
+  frame().end_scope();
+
+  m_builder->SetInsertPoint(cont_block);
+
+  return nullptr;
+}
+
+void codegen_visitor::begin_scope(const frontend::symtab &stab) {
+  frame().begin_scope();
+
+  for (auto &[name, attrs] : stab) {
+    auto *variable_def = attrs.m_definition;
+    assert(variable_def);
+    auto *llvm_value =
+        m_builder->CreateAlloca(get_llvm_type(variable_def->type));
+    frame().add_value(name, llvm_value);
+  }
 }
 
 auto emit_llvm_module(llvm::LLVMContext &ctx,
