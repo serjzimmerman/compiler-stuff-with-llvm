@@ -41,6 +41,11 @@ public:
   auto begin() const { return vector::begin(); }
   auto end() const { return vector::end(); }
 
+  /// @return Pointer to the function definition. `nullptr` if the call is
+  /// indirect.
+  auto call_target() -> ast::function_definition * { return m_def; }
+  auto call_target() const -> const ast::function_definition * { return m_def; }
+
   void append_parameter(i_expression *ptr) { vector::push_back(ptr); }
 };
 

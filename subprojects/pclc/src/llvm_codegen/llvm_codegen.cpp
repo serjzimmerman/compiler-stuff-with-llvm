@@ -136,7 +136,7 @@ private:
                               ast::constant_expression, ast::print_statement,
                               ast::read_expression, ast::statement_block,
                               ast::unary_expression, ast::variable_expression,
-                              ast::return_statement>;
+                              ast::return_statement, ast::function_call>;
 
 public:
   EZVIS_VISIT_CT(to_visit);
@@ -151,13 +151,13 @@ public:
   auto generate(const ast::unary_expression &) -> llvm::Value *;
   auto generate(const ast::variable_expression &) -> llvm::Value *;
   auto generate(const ast::return_statement &) -> llvm::Instruction *;
-
-  /// @return Pointer to the right-hand-side of the assignment.
-  auto generate(const ast::assignment_statement &) -> llvm::Value *;
-
   auto generate(const ast::constant_expression &) -> llvm::Value *;
   auto generate(const ast::print_statement &) -> llvm::Instruction *;
   auto generate(const ast::read_expression &) -> llvm::Value *;
+  auto generate(const ast::function_call &) -> llvm::Value *;
+
+  /// @return Pointer to the right-hand-side of the assignment.
+  auto generate(const ast::assignment_statement &) -> llvm::Value *;
 
   /// @return Always nullptr
   /// TODO: Maybe there should be a separate expression visitor to avoid dummy
@@ -438,6 +438,33 @@ auto codegen_visitor::generate(const ast::return_statement &ref)
   auto *op = apply(ref.expr());
   assert(op);
   return m_builder->CreateRet(op);
+}
+
+auto codegen_visitor::generate(const ast::function_call &ref) -> llvm::Value * {
+  const auto *target_function = ref.call_target();
+
+  auto args = std::vector<llvm::Value *>{};
+  for (auto *arg : ref) {
+    args.push_back(apply(*arg));
+  }
+
+  if (target_function)
+    return m_builder->CreateCall(m_function_defs.at(target_function), args);
+
+  // NOTE: Handle indirect calls through a function pointer.
+  auto *return_type = get_llvm_type(ref.type);
+  auto args_types = std::vector<llvm::Type *>{};
+  args_types.reserve(ref.size());
+  std::transform(ref.cbegin(), ref.cend(), std::back_inserter(args_types),
+                 [&](auto *expr_val) {
+                   return get_llvm_type(expr_val->type,
+                                        /*is_function_decl=*/false);
+                 });
+
+  auto *func_type = llvm::FunctionType::get(return_type, args_types, false);
+
+  return m_builder->CreateCall(func_type,
+                               frame().lookup_value(ref.name()).value());
 }
 
 auto emit_llvm_module(llvm::LLVMContext &ctx,
