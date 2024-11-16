@@ -138,12 +138,12 @@ private:
   };
 
 private:
-  using to_visit =
-      std::tuple<ast::assignment_statement, ast::binary_expression,
-                 ast::constant_expression, ast::print_statement,
-                 ast::read_expression, ast::statement_block,
-                 ast::unary_expression, ast::variable_expression,
-                 ast::return_statement, ast::function_call, ast::if_statement>;
+  using to_visit = std::tuple<ast::assignment_statement, ast::binary_expression,
+                              ast::constant_expression, ast::print_statement,
+                              ast::read_expression, ast::statement_block,
+                              ast::unary_expression, ast::variable_expression,
+                              ast::return_statement, ast::function_call,
+                              ast::if_statement, ast::while_statement>;
 
 public:
   EZVIS_VISIT_CT(to_visit);
@@ -174,6 +174,9 @@ public:
 
   /// @return Always nullptr
   auto generate(const ast::if_statement &) -> llvm::Value *;
+
+  /// @return Always nullptr
+  auto generate(const ast::while_statement &) -> llvm::Value *;
 
   EZVIS_VISIT_INVOKER(generate);
 
@@ -498,6 +501,35 @@ auto codegen_visitor::generate(const ast::if_statement &ref) -> llvm::Value * {
   frame().end_scope();
 
   m_builder->SetInsertPoint(cont_block);
+
+  return nullptr;
+}
+
+auto codegen_visitor::generate(const ast::while_statement &ref)
+    -> llvm::Value * {
+  auto *body_block = create_block("body");
+  auto *cond_block = create_block("cond");
+  auto *exit_block = create_block("exit");
+
+  assert(body_block);
+  assert(cond_block);
+  assert(exit_block);
+
+  begin_scope(ref.symbol_table);
+  m_builder->CreateBr(cond_block);
+
+  m_builder->SetInsertPoint(cond_block);
+  auto *cond_value = apply(ref.cond());
+  assert(cond_value);
+  m_builder->CreateCondBr(cond_value, body_block, exit_block);
+
+  m_builder->SetInsertPoint(body_block);
+  apply(ref.block());
+  m_builder->CreateBr(cond_block);
+
+  frame().end_scope();
+
+  m_builder->SetInsertPoint(exit_block);
 
   return nullptr;
 }

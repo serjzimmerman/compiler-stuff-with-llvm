@@ -129,6 +129,7 @@ int main(int argc, char *argv[]) try {
     assert(engine);
 
     intrinsics::add_intrinsics_mapping(*engine);
+    engine->setVerifyModules(/*Verify=*/true);
     engine->finalizeObject();
     engine->runFunction(module_ref.getFunction("main"), {});
   };
