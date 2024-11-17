@@ -114,17 +114,21 @@ private:
     llvm::BasicBlock *exit_block;
   };
 
-  std::vector<block_scope_value_info> m_scope_out_values;
+  std::vector<std::unique_ptr<block_scope_value_info>> m_scope_out_values;
 
 private:
   void push_scope_value_info() { m_scope_out_values.emplace_back(); }
 
-  auto &get_scope_value_info() & {
-    assert(m_scope_out_values.size());
-    return m_scope_out_values.back();
+  auto get_scope_value_info() -> block_scope_value_info * {
+    auto found =
+        std::find_if(m_scope_out_values.rbegin(), m_scope_out_values.rend(),
+                     [](auto &info) -> bool { return info.get(); });
+    if (found != m_scope_out_values.rend())
+      return found->get();
+    return nullptr;
   }
 
-  auto has_scope_value() -> bool { return m_scope_out_values.size(); }
+  auto has_scope_value() -> bool { return get_scope_value_info(); }
 
   auto scoped_statement() {
     struct scope_statement {
@@ -476,12 +480,14 @@ auto codegen_visitor::generate(const ast::statement_block &block,
     begin_scope(block.stab);
   }
 
-  if (!is_semantic_scope)
-    get_scope_value_info() = {
-        .out_value = m_builder->CreateAlloca(get_llvm_type(block.type)),
-        .exit_block = llvm::BasicBlock::Create(ctx(), "exit_block_return",
-                                               get_current_function()),
-    };
+  if (!is_semantic_scope) {
+    assert(m_scope_out_values.size());
+    auto &info = m_scope_out_values.back();
+    info = std::make_unique<block_scope_value_info>(
+        m_builder->CreateAlloca(get_llvm_type(block.type)),
+        llvm::BasicBlock::Create(ctx(), "exit_block_return",
+                                 get_current_function()));
+  }
 
   for (const auto *st : block) {
     assert(st);
@@ -508,9 +514,10 @@ auto codegen_visitor::generate(const ast::statement_block &block,
   frame().end_scope();
 
   if (!is_semantic_scope) {
-    auto &info = get_scope_value_info();
-    m_builder->SetInsertPoint(info.exit_block);
-    return m_builder->CreateLoad(get_llvm_type(block.type), info.out_value);
+    auto *info = get_scope_value_info();
+    assert(info);
+    m_builder->SetInsertPoint(info->exit_block);
+    return m_builder->CreateLoad(get_llvm_type(block.type), info->out_value);
   }
 
   return nullptr;
@@ -551,19 +558,19 @@ auto codegen_visitor::generate(const ast::variable_expression &ref)
 auto codegen_visitor::generate(const ast::return_statement &ref)
     -> llvm::Value * {
   if (has_scope_value()) {
-    auto &info = get_scope_value_info();
-    assert(info.out_value);
-    assert(info.exit_block);
+    auto *info = get_scope_value_info();
+    assert(info->out_value);
+    assert(info->exit_block);
 
     auto guard = scoped_statement();
     auto *op = apply(ref.expr());
     guard.release();
     assert(op);
 
-    m_builder->CreateStore(op, info.out_value);
-    m_builder->CreateBr(info.exit_block);
+    m_builder->CreateStore(op, info->out_value);
+    m_builder->CreateBr(info->exit_block);
 
-    return info.out_value;
+    return info->out_value;
   }
 
   if (ref.empty())
