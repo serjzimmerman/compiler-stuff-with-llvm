@@ -252,7 +252,7 @@ void codegen_visitor::generate_function_declarations() {
     m_function_defs.insert({func, llvm_function});
   }
 
-  auto *main_func_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx()),
+  auto *main_func_type = llvm::FunctionType::get(llvm::Type::getVoidTy(ctx()),
                                                  /*isVarArg=*/false);
 
   set_main_function(llvm::Function::Create(
@@ -335,8 +335,7 @@ void codegen_visitor::generate_all(const ast::ast_container &ast) {
     // this?
     auto *bb = llvm::BasicBlock::Create(ctx(), "empty", get_main_function());
     m_builder->SetInsertPoint(bb);
-    m_builder->CreateRet(
-        llvm::Constant::getNullValue(llvm::Type::getInt32Ty(ctx())));
+    m_builder->CreateRetVoid();
   }
 }
 
@@ -477,8 +476,7 @@ auto codegen_visitor::generate(const ast::statement_block &block,
   }
 
   if (global_scope)
-    m_builder->CreateRet(
-        llvm::Constant::getNullValue(llvm::Type::getInt32Ty(ctx())));
+    m_builder->CreateRetVoid();
 
   frame().end_scope();
 
@@ -524,6 +522,8 @@ auto codegen_visitor::generate(const ast::variable_expression &ref)
 
 auto codegen_visitor::generate(const ast::return_statement &ref)
     -> llvm::Instruction * {
+  if (ref.empty())
+    return m_builder->CreateRetVoid();
   auto *op = apply(ref.expr());
   assert(op);
   return m_builder->CreateRet(op);
