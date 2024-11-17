@@ -6,6 +6,10 @@
 //                                               /_/                          //
 // -- This code is licensed under GPLv3 license (see LICENSE for details) --- //
 
+extern "C" {
+#include "cswl-sim/bindings.h"
+}
+
 #include <cstdint>
 
 namespace llvm {
@@ -23,5 +27,9 @@ void add_intrinsics_mapping(llvm::ExecutionEngine &engine);
 
 auto get_print_int32_function(llvm::Module &module) -> llvm::Function *;
 auto get_read_int32_function(llvm::Module &module) -> llvm::Function *;
+auto get_sim_init(llvm::Module &module) -> llvm::Function *;
+auto get_sim_flush(llvm::Module &module) -> llvm::Function *;
+auto get_sim_put_pixel(llvm::Module &module) -> llvm::Function *;
+auto get_sim_rand(llvm::Module &module) -> llvm::Function *;
 
 } // namespace paracl::llvm_codegen::intrinsics

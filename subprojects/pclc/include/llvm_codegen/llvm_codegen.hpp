@@ -8,10 +8,6 @@
 
 #pragma once
 
-extern "C" {
-#include "cswl-sim/bindings.h"
-}
-
 #include "frontend/frontend_driver.hpp"
 
 #include <llvm/IR/Module.h>
