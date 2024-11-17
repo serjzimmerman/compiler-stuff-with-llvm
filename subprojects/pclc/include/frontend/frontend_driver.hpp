@@ -100,6 +100,7 @@ public:
   }
 
   const ast::ast_container &ast() const & { return m_parsing_driver->ast(); }
+  ast::ast_container &ast() & { return m_parsing_driver->ast(); }
   const functions_analytics &functions() const & { return m_functions; }
 
   void parse() { m_parsing_driver->parse(); }

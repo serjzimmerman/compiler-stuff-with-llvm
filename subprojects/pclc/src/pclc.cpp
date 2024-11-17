@@ -66,7 +66,12 @@ int main(int argc, char *argv[]) try {
   paracl::frontend::frontend_driver drv{input_file_name};
   drv.parse();
 
-  const auto &parse_tree = drv.ast();
+  auto &parse_tree = drv.ast();
+
+#ifdef PCLC_LLVM_CODEGEN
+  paracl::llvm_codegen::intrinsics::add_function_intrinsics(drv.ast());
+#endif
+
   bool valid = drv.analyze();
 
   if (ast_dump_option->is_set()) {

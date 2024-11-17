@@ -6,6 +6,8 @@
 //                                               /_/                          //
 // -- This code is licensed under GPLv3 license (see LICENSE for details) --- //
 
+#include "frontend/ast/ast_nodes/function_decl.hpp"
+
 #include "llvm_codegen/intrinsics.hpp"
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -16,14 +18,6 @@
 #include <string_view>
 
 namespace paracl::llvm_codegen::intrinsics {
-
-inline constexpr std::string_view print_int32_name = "__pclc_print_int32";
-inline constexpr std::string_view read_int32_name = "__pclc_read_int32";
-inline constexpr std::string_view sim_init_name = "__pclc_sim_init";
-inline constexpr std::string_view sim_exit_name = "__pclc_sim_exit";
-inline constexpr std::string_view sim_flush_name = "__pclc_sim_flush";
-inline constexpr std::string_view sim_rand_name = "__pclc_sim_rand";
-inline constexpr std::string_view sim_put_pixel_name = "__pclc_sim_put_pixel";
 
 void print_int32(int32_t value) { fmt::println("{:d}", value); }
 
@@ -111,6 +105,53 @@ void add_intrinsics_mapping(llvm::ExecutionEngine &engine) {
                      sim_put_pixel);
     return nullptr;
   });
+}
+
+void add_function_intrinsics(frontend::ast::ast_container &ast) {
+  auto *root_node = ast.get_root_ptr();
+  if (!root_node)
+    return;
+
+  auto &dummy_intrinsic_body = ast.make_node<frontend::ast::statement_block>();
+
+  using namespace std::string_literals;
+
+  auto &type_int = frontend::types::type_builtin::type_int;
+  auto &type_void = frontend::types::type_builtin::type_void;
+
+  auto &sim_init = ast.make_node<frontend::ast::function_definition>(
+      std::optional{"sim_init"s}, dummy_intrinsic_body, frontend::location(),
+      std::vector<frontend::ast::variable_expression>{}, type_void);
+
+  auto &sim_exit = ast.make_node<frontend::ast::function_definition>(
+      std::optional{"sim_exit"s}, dummy_intrinsic_body, frontend::location(),
+      std::vector<frontend::ast::variable_expression>{}, type_void);
+
+  auto &sim_flush = ast.make_node<frontend::ast::function_definition>(
+      std::optional{"sim_flush"s}, dummy_intrinsic_body, frontend::location(),
+      std::vector<frontend::ast::variable_expression>{}, type_void);
+
+  auto &sim_rand = ast.make_node<frontend::ast::function_definition>(
+      std::optional{"sim_rand"s}, dummy_intrinsic_body, frontend::location(),
+      std::vector<frontend::ast::variable_expression>{}, type_int);
+
+  auto x_argument = ast.make_node<frontend::ast::variable_expression>(
+      "__arg_x", type_int, frontend::location());
+  auto y_argument = ast.make_node<frontend::ast::variable_expression>(
+      "__arg_y", type_int, frontend::location());
+  auto color_argument = ast.make_node<frontend::ast::variable_expression>(
+      "__arg_color", type_int, frontend::location());
+  auto &sim_put_pixel = ast.make_node<frontend::ast::function_definition>(
+      std::optional{"sim_put_pixel"s}, dummy_intrinsic_body,
+      frontend::location(), std::vector<frontend::ast::variable_expression>{},
+      type_void);
+
+  auto &statements = static_cast<frontend::ast::statement_block &>(*root_node);
+  statements.append_statement(sim_init);
+  statements.append_statement(sim_exit);
+  statements.append_statement(sim_flush);
+  statements.append_statement(sim_rand);
+  statements.append_statement(sim_put_pixel);
 }
 
 } // namespace paracl::llvm_codegen::intrinsics
