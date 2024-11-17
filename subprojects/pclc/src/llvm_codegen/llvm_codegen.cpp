@@ -341,7 +341,9 @@ void codegen_visitor::generate_all(const ast::ast_container &ast) {
 
 auto codegen_visitor::generate(const ast::assignment_statement &ref)
     -> llvm::Value * {
+  reset_currently_statement();
   auto *value_to_store = apply(ref.right());
+  assert(value_to_store);
 
   for (auto start = ref.rbegin(), finish = ref.rend(); start != finish;
        ++start) {
