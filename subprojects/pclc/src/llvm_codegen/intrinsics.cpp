@@ -143,15 +143,17 @@ void add_function_intrinsics(frontend::ast::ast_container &ast) {
       "__arg_color", type_int, frontend::location());
   auto &sim_put_pixel = ast.make_node<frontend::ast::function_definition>(
       std::optional{"sim_put_pixel"s}, dummy_intrinsic_body,
-      frontend::location(), std::vector<frontend::ast::variable_expression>{},
+      frontend::location(),
+      std::vector<frontend::ast::variable_expression>{x_argument, y_argument,
+                                                      color_argument},
       type_void);
 
   auto &statements = static_cast<frontend::ast::statement_block &>(*root_node);
-  statements.append_statement(sim_init);
-  statements.append_statement(sim_exit);
-  statements.append_statement(sim_flush);
-  statements.append_statement(sim_rand);
-  statements.append_statement(sim_put_pixel);
+  statements.add_intrinsic(sim_init);
+  statements.add_intrinsic(sim_exit);
+  statements.add_intrinsic(sim_flush);
+  statements.add_intrinsic(sim_rand);
+  statements.add_intrinsic(sim_put_pixel);
 }
 
 } // namespace paracl::llvm_codegen::intrinsics

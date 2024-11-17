@@ -13,11 +13,12 @@
 #include "return_statement.hpp"
 
 #include <cassert>
+#include <deque>
 #include <vector>
 
 namespace paracl::frontend::ast {
 
-class statement_block : public i_expression, private std::vector<i_ast_node *> {
+class statement_block : public i_expression, private std::deque<i_ast_node *> {
 public:
   symtab stab;
   return_vector return_statements;
@@ -28,11 +29,11 @@ private:
 public:
   statement_block() = default;
   statement_block(std::vector<i_ast_node *> vec, location l)
-      : i_expression{l}, vector{vec} {}
+      : i_expression{l}, deque(vec.begin(), vec.end()) {}
 
   void append_statement(i_ast_node &statement) {
-    const bool empty = vector::empty();
-    vector::push_back(&statement);
+    const bool empty = deque::empty();
+    deque::push_back(&statement);
 
     if (empty) {
       m_loc = statement.loc();
@@ -41,16 +42,20 @@ public:
     }
   }
 
+  // HACK: Helper function to add intrinsic definitions to the beginning of the
+  // ast.
+  void add_intrinsic(i_ast_node &statement) { deque::push_front(&statement); }
+
 public:
-  using vector::back;
-  using vector::begin;
-  using vector::cbegin;
-  using vector::cend;
-  using vector::crbegin;
-  using vector::crend;
-  using vector::end;
-  using vector::front;
-  using vector::size;
+  using deque::back;
+  using deque::begin;
+  using deque::cbegin;
+  using deque::cend;
+  using deque::crbegin;
+  using deque::crend;
+  using deque::end;
+  using deque::front;
+  using deque::size;
 };
 
 } // namespace paracl::frontend::ast

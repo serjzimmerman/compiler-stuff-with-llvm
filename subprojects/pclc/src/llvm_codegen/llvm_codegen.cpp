@@ -331,7 +331,26 @@ void codegen_visitor::declarate_global_values() {
 
 void codegen_visitor::generate_function(
     const ast::function_definition &func_def) {
-  auto *llvm_func = m_function_defs.at(&func_def);
+  llvm::Function *llvm_func = nullptr;
+  llvm::Function *intrinsic_func = nullptr;
+  // TODO: Maybe make this a bit prettier with enumerations?
+  if (auto name = func_def.name.value(); name == "sim_init") {
+    intrinsic_func = llvm_func = intrinsics::get_sim_init(*m_module);
+  } else if (name == "sim_exit") {
+    intrinsic_func = llvm_func = intrinsics::get_sim_exit(*m_module);
+  } else if (name == "sim_flush") {
+    intrinsic_func = llvm_func = intrinsics::get_sim_flush(*m_module);
+  } else if (name == "sim_rand") {
+    intrinsic_func = llvm_func = intrinsics::get_sim_rand(*m_module);
+  } else if (name == "sim_put_pixel") {
+    intrinsic_func = llvm_func = intrinsics::get_sim_put_pixel(*m_module);
+  } else {
+    llvm_func = m_function_defs.at(&func_def);
+  }
+
+  if (intrinsic_func) {
+    return;
+  }
 
   assert(llvm_func);
   set_current_function(llvm_func);
