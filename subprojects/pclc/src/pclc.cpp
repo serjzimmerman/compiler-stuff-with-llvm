@@ -128,8 +128,9 @@ int main(int argc, char *argv[]) try {
     if (debug_option->is_set())
       module_ref.dump();
 
-    auto engine = std::unique_ptr<llvm::ExecutionEngine>(
-        llvm::EngineBuilder(std::move(owning_module)).create());
+    auto builder = llvm::EngineBuilder(std::move(owning_module));
+    builder.setOptLevel(llvm::CodeGenOptLevel::Aggressive);
+    auto engine = std::unique_ptr<llvm::ExecutionEngine>(builder.create());
 
     assert(engine);
 
