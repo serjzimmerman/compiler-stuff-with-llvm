@@ -35,6 +35,10 @@ constant_expression &ast_copier::copy(const constant_expression &ref) {
   return trivial_ast_node_copy(ref, m_container);
 }
 
+variable_declaration &ast_copier::copy(const variable_declaration &ref) {
+  return trivial_ast_node_copy(ref, m_container);
+}
+
 binary_expression &ast_copier::copy(const binary_expression &ref) {
   return m_container.make_node<binary_expression>(
       ref.op_type(), copy_expr(ref.left()), copy_expr(ref.right()), ref.loc());

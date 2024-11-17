@@ -172,13 +172,15 @@ public:
 
   void analyze_node(ast::statement_block &, bool main_block = false);
   void analyze_node(ast::unary_expression &);
-  bool analyze_node(ast::variable_expression &, bool can_declare = false);
+  bool analyze_node(ast::variable_expression &, bool can_declare = false,
+                    bool is_decl = false);
   void analyze_node(ast::while_statement &);
 
   void analyze_node(ast::function_call &);
   void analyze_node(ast::function_definition &);
   void analyze_node(ast::function_definition_to_ptr_conv &);
   void analyze_node(ast::return_statement &);
+  void analyze_node(ast::variable_declaration &);
 
   EZVIS_VISIT_INVOKER(analyze_node);
 

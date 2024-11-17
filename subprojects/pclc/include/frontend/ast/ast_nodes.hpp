@@ -21,5 +21,6 @@
 #include "ast_nodes/return_statement.hpp"
 #include "ast_nodes/statement_block.hpp"
 #include "ast_nodes/unary_expression.hpp"
+#include "ast_nodes/variable_declaration.hpp"
 #include "ast_nodes/variable_expression.hpp"
 #include "ast_nodes/while_statement.hpp"

@@ -32,6 +32,7 @@ enum class ast_node_type {
   E_VARIABLE_EXPRESSION,
   E_RETURN_STATEMENT,
   E_FUNCTION_DEFINITION_TO_PTR_CONV,
+  E_VARIABLE_DECLARATION,
 };
 
 namespace detail {
@@ -52,6 +53,7 @@ template <> inline ast_node_type get_ast_node_type<unary_expression>() { return 
 template <> inline ast_node_type get_ast_node_type<variable_expression>() { return ast_node_type::E_VARIABLE_EXPRESSION; }
 template <> inline ast_node_type get_ast_node_type<return_statement>() { return ast_node_type::E_RETURN_STATEMENT; }
 template <> inline ast_node_type get_ast_node_type<function_definition_to_ptr_conv>() { return ast_node_type::E_FUNCTION_DEFINITION_TO_PTR_CONV; }
+template <> inline ast_node_type get_ast_node_type<variable_declaration>() { return ast_node_type::E_VARIABLE_DECLARATION; }
 // clang-format on
 } // namespace detail
 

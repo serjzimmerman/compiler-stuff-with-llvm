@@ -30,6 +30,7 @@ namespace paracl::frontend::types {
 enum class type_class {
   E_BUILTIN,
   E_COMPOSITE_FUNCTION,
+  E_COMPOSITE_ARRAY,
 };
 
 enum class builtin_type_class {
@@ -234,6 +235,37 @@ public:
   using vector::crend;
   using vector::empty;
   using vector::size;
+};
+
+class type_composite_array : public i_type {
+public:
+  generic_type m_value_type;
+  uint32_t m_size;
+
+  EZVIS_VISITABLE();
+
+public:
+  type_composite_array(generic_type value_type, uint32_t size)
+      : i_type{type_class::E_COMPOSITE_ARRAY}, m_value_type{value_type},
+        m_size{size} {}
+
+  // TODO: This should be the default comparison operator.
+  bool is_equal(const i_type &rhs) const override {
+    if (m_type_tag != rhs.get_class())
+      return false;
+    const auto &cast_rhs = static_cast<const type_composite_array &>(rhs);
+    return m_value_type.base().is_equal(cast_rhs.m_value_type.base()) &&
+           m_size == cast_rhs.m_value_type;
+  }
+
+  std::string to_string() const override {
+    std::vector<std::string> arg_types_str;
+    return fmt::format("{}[{}]", m_value_type.to_string(), m_size);
+  }
+
+  unique_type clone() const override {
+    return std::make_unique<type_composite_array>(*this);
+  }
 };
 
 } // namespace paracl::frontend::types

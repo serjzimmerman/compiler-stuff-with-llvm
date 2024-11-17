@@ -51,6 +51,7 @@ public:
   void dump_node(const statement_block &ref);
   void dump_node(const unary_expression &ref);
   void dump_node(const while_statement &ref);
+  void dump_node(const variable_declaration &ref);
 
   void dump_node(const read_expression &ref) {
     print_declare_node(ref, "<read> ?");
@@ -130,6 +131,11 @@ void ast_dumper::dump_node(const binary_expression &ref) {
 
   add_next(ref.left());
   add_next(ref.right());
+}
+
+void ast_dumper::dump_node(const variable_declaration &ref) {
+  print_declare_node(ref, fmt::format("<identifier> {}\n<type> {}", ref.name(),
+                                      ref.type_str()));
 }
 
 void ast_dumper::dump_node(const if_statement &ref) {

@@ -1,0 +1,12 @@
+// RUN: not pclc %s | FileCheck %s
+
+int a;
+int a;
+
+// CHECK: redeclare.pcl:4.1-6: Redefinition of variable a
+// CHECK-NEXT: 4 |     int a;
+// CHECK-NEXT:         ^~~~~
+
+// CHECK: redeclare.pcl:3.1-6: First declared here
+// CHECK-NEXT: 3 |     int a;
+// CHECK-NEXT:         ^~~~~

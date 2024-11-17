@@ -87,6 +87,8 @@ static paracl::frontend::parser::symbol_type yylex(paracl::frontend::scanner &p_
 %token RPAREN   ")"
 %token LBRACE   "{"
 %token RBRACE   "}"
+%token LBRACKET "["
+%token RBRACKET "]"
 
 %token ASSIGN   "="
 
@@ -164,6 +166,9 @@ static paracl::frontend::parser::symbol_type yylex(paracl::frontend::scanner &p_
   chainable_assignment_statement
   typed_chainable_assignment_statement
 
+%type <ast::variable_declaration *>
+  variable_declaration
+
 %type <std::vector<ast::variable_expression>>
   arglist
   arglist_or_empty
@@ -177,6 +182,7 @@ static paracl::frontend::parser::symbol_type yylex(paracl::frontend::scanner &p_
 %type <types::generic_type>
   builtin_type
   function_type
+  array_type
   type
 
 %type <std::vector<types::generic_type>> 
@@ -249,7 +255,7 @@ expression:
 | chainable_assignment  { $$ = $1; }
 
 /* Allow statement_block not to be followed by a semicol */
-chainable_assignment_statement:  
+chainable_assignment_statement:
 IDENTIFIER ASSIGN chainable_assignment_statement    { $$ = $3; auto left = ast::variable_expression{$1, @1}; $$->append_variable(left); }
 | IDENTIFIER ASSIGN logical_expression SEMICOL      { auto left = ast::variable_expression{$1, @1}; $$ = driver.make_ast_node<ast::assignment_statement>(left, *$3, @3); }
 | IDENTIFIER ASSIGN function_def optional_semicol   {
@@ -264,6 +270,9 @@ typed_chainable_assignment_statement:
 | typed_identifier ASSIGN function_def optional_semicol     {
   auto fnc_ptr = driver.make_ast_node<ast::function_definition_to_ptr_conv>(@3, *$3);
   $$ = driver.make_ast_node<ast::assignment_statement>(*$1, *fnc_ptr, @3); }
+
+variable_declaration:
+  type IDENTIFIER SEMICOL { $$ = driver.make_ast_node<ast::variable_declaration>(ast::variable_expression($2, $1, @$)); }
 
 chainable_assignment:
   IDENTIFIER ASSIGN chainable_assignment  { $$ = $3; auto left = ast::variable_expression{$1, @1}; $$->append_variable(left); } 
@@ -307,6 +316,7 @@ statement:
 | expression_statement                  { $$ = $1; }
 | function_def optional_semicol         { $$ = $1; }
 | return_statement                      { $$ = $1; }
+| variable_declaration                  { $$ = $1; }
 
 arglist:
   arglist COMMA typed_identifier  { $$ = std::move($1); $$.push_back(*$3); }
@@ -341,9 +351,15 @@ builtin_type:
 
 function_type:  type FUNC LPAREN type_list_or_empty RPAREN  { $$ = types::generic_type::make<types::type_composite_function>(std::move($4), $1); }
 
+array_type: type LBRACKET INTEGER_CONSTANT RBRACKET {
+  // TODO: Diagnose negative sizes. Currently this is a quick hack on the grammar.
+  $$ = types::generic_type::make<types::type_composite_array>(std::move($1), static_cast<uint32_t>($3));
+}
+
 type:
   builtin_type    { $$ = $1; }
 | function_type   { $$ = $1; }
+| array_type      { $$ = $1; }
 
 type_list:
   type_list COMMA type  { $$ = std::move($1); $$.push_back($3); }

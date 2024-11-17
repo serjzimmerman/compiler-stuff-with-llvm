@@ -73,6 +73,10 @@ void semantic_analyzer::analyze_node(ast::assignment_statement &ref) {
   ref.type = ref.right().type;
 }
 
+void semantic_analyzer::analyze_node(ast::variable_declaration &ref) {
+  analyze_node(ref.get_variable_expr(), /*can_declare=*/true, /*is_decl=*/true);
+}
+
 void semantic_analyzer::analyze_node(ast::binary_expression &ref) {
   apply(ref.right());
   apply(ref.left());
@@ -214,7 +218,7 @@ void semantic_analyzer::analyze_node(ast::while_statement &ref) {
 }
 
 bool semantic_analyzer::analyze_node(ast::variable_expression &ref,
-                                     bool can_declare) {
+                                     bool can_declare, bool is_decl) {
   auto attr = m_scopes.lookup_symbol(ref.name());
 
   if (!attr) { // Not found.
@@ -229,6 +233,18 @@ bool semantic_analyzer::analyze_node(ast::variable_expression &ref,
   }
 
   assert(attr->m_definition && "Broken definition pointer");
+
+  if (is_decl) {
+    error_report error = {
+        {fmt::format("Redefinition of variable {}", ref.name()), ref.loc()}};
+
+    error.add_attachment(
+        {fmt::format("First declared here"), attr->m_definition->loc()});
+    report_error(error);
+
+    return true;
+  }
+
   ref.type = ezvis::visit<types::generic_type, ast::variable_expression>(
       [](ast::variable_expression &v) { return v.type; }, *attr->m_definition);
 

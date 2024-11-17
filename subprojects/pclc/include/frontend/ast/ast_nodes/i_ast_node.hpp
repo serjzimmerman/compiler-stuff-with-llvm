@@ -44,7 +44,7 @@ public:
   }
 };
 
-// Expresssions
+// Expressions
 class binary_expression;
 class constant_expression;
 class read_expression;
@@ -62,6 +62,7 @@ class print_statement;
 class while_statement;
 class function_definition;
 class return_statement;
+class variable_declaration;
 
 class error_node;
 
@@ -71,9 +72,8 @@ using tuple_expression_nodes =
                variable_expression, function_call,
                function_definition_to_ptr_conv>;
 
-using tuple_all_nodes =
-    utils::tuple_add_types_t<tuple_expression_nodes, if_statement,
-                             print_statement, while_statement, error_node,
-                             function_definition, return_statement>;
+using tuple_all_nodes = utils::tuple_add_types_t<
+    tuple_expression_nodes, if_statement, print_statement, while_statement,
+    error_node, function_definition, return_statement, variable_declaration>;
 
 } // namespace paracl::frontend::ast

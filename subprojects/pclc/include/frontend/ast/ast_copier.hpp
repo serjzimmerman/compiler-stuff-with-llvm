@@ -41,6 +41,8 @@ public:
   function_definition &copy(const function_definition &);
   return_statement &copy(const return_statement &);
   function_call &copy(const function_call &);
+  variable_declaration &copy(const variable_declaration &);
+
   function_definition_to_ptr_conv &
   copy(const function_definition_to_ptr_conv &);
 

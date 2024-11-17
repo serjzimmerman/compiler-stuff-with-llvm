@@ -34,6 +34,8 @@ cpp_style_comment ([/][/].*)
 
 "("             { return parser::make_LPAREN(update_loc()); }
 ")"             { return parser::make_RPAREN(update_loc()); }
+"["             { return parser::make_LBRACKET(update_loc()); }
+"]"             { return parser::make_RBRACKET(update_loc()); }
 "{"             { return parser::make_LBRACE(update_loc()); }
 "}"             { return parser::make_RBRACE(update_loc()); }
 ";"             { return parser::make_SEMICOL(update_loc()); }
