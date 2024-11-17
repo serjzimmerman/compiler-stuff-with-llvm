@@ -1,5 +1,6 @@
 // RUN: pclc %s | tee %t.stdout
 // RUN: diff -Z %t.stdout %s.ans
+// REQUIRES: blocks
 
 a = {
   {a = 1;}; // here 1 is ignored

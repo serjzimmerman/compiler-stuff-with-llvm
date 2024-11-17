@@ -481,12 +481,7 @@ auto codegen_visitor::generate(const ast::statement_block &block,
   }
 
   if (!is_semantic_scope) {
-    assert(m_scope_out_values.size());
-    auto &info = m_scope_out_values.back();
-    info = std::make_unique<block_scope_value_info>(
-        m_builder->CreateAlloca(get_llvm_type(block.type)),
-        llvm::BasicBlock::Create(ctx(), "exit_block_return",
-                                 get_current_function()));
+    throw std::runtime_error{"blocks are not supported"};
   }
 
   for (const auto *st : block) {
@@ -514,10 +509,7 @@ auto codegen_visitor::generate(const ast::statement_block &block,
   frame().end_scope();
 
   if (!is_semantic_scope) {
-    auto *info = get_scope_value_info();
-    assert(info);
-    m_builder->SetInsertPoint(info->exit_block);
-    return m_builder->CreateLoad(get_llvm_type(block.type), info->out_value);
+    throw std::runtime_error{"blocks are not supported"};
   }
 
   return nullptr;
@@ -558,19 +550,7 @@ auto codegen_visitor::generate(const ast::variable_expression &ref)
 auto codegen_visitor::generate(const ast::return_statement &ref)
     -> llvm::Value * {
   if (has_scope_value()) {
-    auto *info = get_scope_value_info();
-    assert(info->out_value);
-    assert(info->exit_block);
-
-    auto guard = scoped_statement();
-    auto *op = apply(ref.expr());
-    guard.release();
-    assert(op);
-
-    m_builder->CreateStore(op, info->out_value);
-    m_builder->CreateBr(info->exit_block);
-
-    return info->out_value;
+    throw std::runtime_error{"blocks are not implemented"};
   }
 
   if (ref.empty())

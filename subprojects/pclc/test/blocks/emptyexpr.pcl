@@ -1,5 +1,6 @@
 // RUN: pclc %s | tee %t.stdout
 // RUN: diff -Z %t.stdout %s.ans
+// REQUIRES: blocks
 
 a = 5;
 a * a; // Expression without side effects

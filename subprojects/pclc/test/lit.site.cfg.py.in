@@ -15,4 +15,7 @@ config.environment["PATH"] = os.pathsep.join(
     [str(Path("@pclc_binary@").parent), config.environment["PATH"]],
 )
 
+if r"@backend@" == "vm":
+    config.available_features.add("blocks")
+
 lit_config.load_config(config, str(Path(config.test_source_root) / "cfg.lit.py"))

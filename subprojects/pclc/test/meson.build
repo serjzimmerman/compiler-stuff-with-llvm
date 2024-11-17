@@ -5,6 +5,7 @@ fs = import('fs')
 lit_conf_data.set('test_source_root', meson.current_source_dir())
 lit_conf_data.set('test_build_root', meson.current_build_dir())
 lit_conf_data.set('pclc_binary', pclc.full_path())
+lit_conf_data.set('backend', get_option('compiler_backend'))
 
 lit_site_cfg = configure_file(
     input: 'lit.site.cfg.py.in',
