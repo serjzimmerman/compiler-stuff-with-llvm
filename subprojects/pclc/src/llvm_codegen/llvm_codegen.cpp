@@ -20,6 +20,7 @@
 #include "frontend/symtab.hpp"
 #include "utils/misc.hpp"
 
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
@@ -107,18 +108,20 @@ private:
   const frontend::functions_analytics *m_functions = nullptr;
   llvm::Function *m_main_function = nullptr;
   llvm::Function *m_current_function = nullptr;
+  bool m_is_currently_statement = false;
 
 private:
+  void set_currently_statement() { m_is_currently_statement = true; }
+  void reset_currently_statement() { m_is_currently_statement = false; }
+  bool is_currently_statement() const { return m_is_currently_statement; }
+
   auto ctx() const & -> llvm::LLVMContext & { return m_module->getContext(); }
   auto frame() & -> codegen_stack_frame & { return m_current_frame; }
   auto frame() const & -> const codegen_stack_frame & {
     return m_current_frame;
   }
 
-  auto &global_stab() const & {
-    assert(m_functions->global_stab);
-    return *m_functions->global_stab;
-  }
+  auto *global_stab() const & { return m_functions->global_stab; }
 
   void generate_function_declarations();
   void declarate_global_values();
@@ -127,6 +130,7 @@ private:
   auto *get_current_function() const { return m_current_function; }
 
   auto get_main_function() const -> llvm::Function * { return m_main_function; }
+  void set_main_function(llvm::Function *func) { m_main_function = func; }
 
   auto get_llvm_type(const frontend::types::i_type &type,
                      bool is_function_decl = false) const -> llvm::Type *;
@@ -138,12 +142,13 @@ private:
   };
 
 private:
-  using to_visit = std::tuple<ast::assignment_statement, ast::binary_expression,
-                              ast::constant_expression, ast::print_statement,
-                              ast::read_expression, ast::statement_block,
-                              ast::unary_expression, ast::variable_expression,
-                              ast::return_statement, ast::function_call,
-                              ast::if_statement, ast::while_statement>;
+  using to_visit =
+      std::tuple<ast::assignment_statement, ast::binary_expression,
+                 ast::constant_expression, ast::print_statement,
+                 ast::read_expression, ast::statement_block,
+                 ast::unary_expression, ast::variable_expression,
+                 ast::return_statement, ast::function_call, ast::if_statement,
+                 ast::while_statement, ast::function_definition_to_ptr_conv>;
 
 public:
   EZVIS_VISIT_CT(to_visit);
@@ -162,13 +167,14 @@ public:
   auto generate(const ast::print_statement &) -> llvm::Instruction *;
   auto generate(const ast::read_expression &) -> llvm::Value *;
   auto generate(const ast::function_call &) -> llvm::Value *;
+  auto generate(const ast::function_definition_to_ptr_conv &) -> llvm::Value *;
 
   /// @return Pointer to the right-hand-side of the assignment.
   auto generate(const ast::assignment_statement &) -> llvm::Value *;
 
-  /// @return Always nullptr
-  /// TODO: Maybe there should be a separate expression visitor to avoid dummy
-  /// return values?
+  /// @param global_scope Whether the scope is the global one
+  /// @param is_semantic_scope Whether the scope corresponds to
+  /// if/while/function scopes.
   auto generate(const ast::statement_block &,
                 bool global_scope = false) -> llvm::Value *;
 
@@ -180,8 +186,7 @@ public:
 
   EZVIS_VISIT_INVOKER(generate);
 
-  void generate_function(llvm::Function *llvm_func,
-                         const ast::i_ast_node &entry_point);
+  void generate_function(const ast::function_definition &func_def);
 
   void generate_all(const ast::ast_container &ast);
 
@@ -250,16 +255,19 @@ void codegen_visitor::generate_function_declarations() {
   auto *main_func_type = llvm::FunctionType::get(llvm::Type::getInt32Ty(ctx()),
                                                  /*isVarArg=*/false);
 
-  m_main_function = llvm::Function::Create(
-      main_func_type, llvm::Function::ExternalLinkage, "main", m_module.get());
+  set_main_function(llvm::Function::Create(
+      main_func_type, llvm::Function::ExternalLinkage, "main", m_module.get()));
 }
 
 void codegen_visitor::declarate_global_values() {
-  auto &globals = global_stab();
+  auto *globals = global_stab();
 
   frame().begin_scope();
 
-  for (auto &[name, attrs] : globals) {
+  if (!globals)
+    return;
+
+  for (auto &[name, attrs] : *globals) {
     auto *def = attrs.m_definition;
     assert(def);
     auto *type = get_llvm_type(def->type);
@@ -278,14 +286,33 @@ void codegen_visitor::declarate_global_values() {
   }
 }
 
-void codegen_visitor::generate_function(llvm::Function *llvm_func,
-                                        const ast::i_ast_node &entry_point) {
+void codegen_visitor::generate_function(
+    const ast::function_definition &func_def) {
+  auto *llvm_func = m_function_defs.at(&func_def);
+
   assert(llvm_func);
   set_current_function(llvm_func);
-  auto *entry_block = llvm::BasicBlock::Create(ctx(), "", llvm_func);
+
+  auto *entry_block = llvm::BasicBlock::Create(ctx(), "entry", llvm_func);
   assert(entry_block);
   m_builder->SetInsertPoint(entry_block);
-  apply(entry_point);
+
+  begin_scope(func_def.param_stab);
+
+  for (auto &&[arg_value, variable_expr] :
+       llvm::zip(llvm_func->args(), func_def)) {
+    m_builder->CreateStore(&arg_value,
+                           frame().lookup_value(variable_expr.name()).value());
+  }
+
+  set_currently_statement();
+  generate(static_cast<const ast::statement_block &>(func_def.body()),
+           /*global_scope=*/false);
+
+  frame().end_scope();
+
+  if (func_def.type.return_type() == frontend::types::type_builtin::type_void)
+    m_builder->CreateRetVoid();
 }
 
 void codegen_visitor::generate_all(const ast::ast_container &ast) {
@@ -294,13 +321,22 @@ void codegen_visitor::generate_all(const ast::ast_container &ast) {
 
   for (const auto &[_, attr] : m_functions->usegraph) {
     auto &&[name, func] = *attr;
-    generate_function(m_function_defs.at(func), func->body());
+    assert(func);
+    generate_function(*func);
   }
 
   if (ast.get_root_ptr()) {
+    set_currently_statement();
     ezvis::visit<void, ast::statement_block>(
         [this](auto &st) { generate(st, /*global_scope=*/true); },
         *ast.get_root_ptr());
+  } else {
+    // HACK: To handle empty programs. Maybe there should be a better way to do
+    // this?
+    auto *bb = llvm::BasicBlock::Create(ctx(), "empty", get_main_function());
+    m_builder->SetInsertPoint(bb);
+    m_builder->CreateRet(
+        llvm::Constant::getNullValue(llvm::Type::getInt32Ty(ctx())));
   }
 }
 
@@ -321,7 +357,9 @@ auto codegen_visitor::generate(const ast::binary_expression &ref)
     -> llvm::Value * {
   using bin_op = ast::binary_operation;
 
+  reset_currently_statement();
   auto *lhs = apply(ref.left());
+  reset_currently_statement();
   auto *rhs = apply(ref.right());
 
   llvm::Value *result = [&]() -> llvm::Value * {
@@ -368,6 +406,7 @@ auto codegen_visitor::generate(const ast::constant_expression &constant)
 
 auto codegen_visitor::generate(const ast::print_statement &ref)
     -> llvm::Instruction * {
+  reset_currently_statement();
   auto *value = apply(ref.expr());
   return m_builder->CreateCall(intrinsics::get_print_int32_function(*m_module),
                                {value});
@@ -380,8 +419,13 @@ auto codegen_visitor::generate(const ast::read_expression &) -> llvm::Value * {
 
 auto codegen_visitor::generate(const ast::statement_block &block,
                                bool global_scope) -> llvm::Value * {
+  auto is_semantic_scope = is_currently_statement();
+
+  if (global_scope)
+    assert(is_semantic_scope);
+
+  // NOTE: Special handling of the global scope.
   if (global_scope) {
-    // NOTE: Special handling of the global scope.
     set_current_function(get_main_function());
     auto *entry_block =
         llvm::BasicBlock::Create(ctx(), "entry", get_main_function());
@@ -391,20 +435,57 @@ auto codegen_visitor::generate(const ast::statement_block &block,
   if (!global_scope)
     begin_scope(block.stab);
 
+  llvm::Value *block_return_value = nullptr;
+  llvm::BasicBlock *exit_block_return = nullptr;
+
+  if (!is_semantic_scope) {
+    exit_block_return = llvm::BasicBlock::Create(ctx(), "exit_block_return",
+                                                 get_current_function());
+    block_return_value = m_builder->CreateAlloca(get_llvm_type(block.type));
+  }
+
   for (const auto *st : block) {
     assert(st);
 
     const auto node_type = frontend::ast::identify_node(st);
-    if (node_type != ast::ast_node_type::E_FUNCTION_DEFINITION)
+
+    switch (node_type) {
+    case ast::ast_node_type::E_FUNCTION_DEFINITION:
+      continue;
+    case ast::ast_node_type::E_RETURN_STATEMENT: {
+      if (is_semantic_scope) {
+        apply(*st);
+        break;
+      }
+
+      assert(block_return_value);
+      assert(exit_block_return);
+      auto &ret_statement = static_cast<const ast::return_statement &>(*st);
+      m_builder->CreateStore(apply(ret_statement.expr()), block_return_value);
+      m_builder->CreateBr(exit_block_return);
+      break;
+    }
+    default:
       apply(*st);
+    }
+
+    // NOTE: Everything after a return statement is dead code and we can skip
+    // generating the ir for it. Otherwise we could get a terminator in the
+    // middle of the basic block.
+    if (node_type == ast::ast_node_type::E_RETURN_STATEMENT)
+      break;
   }
 
-  if (global_scope) {
-    m_builder->CreateRet(llvm::Constant::getIntegerValue(
-        llvm::Type::getInt32Ty(ctx()), llvm::APInt(32, 0)));
-  }
+  if (global_scope)
+    m_builder->CreateRet(
+        llvm::Constant::getNullValue(llvm::Type::getInt32Ty(ctx())));
 
   frame().end_scope();
+
+  if (!is_semantic_scope) {
+    m_builder->SetInsertPoint(exit_block_return);
+    return m_builder->CreateLoad(get_llvm_type(block.type), block_return_value);
+  }
 
   return nullptr;
 }
@@ -413,6 +494,7 @@ auto codegen_visitor::generate(const ast::unary_expression &ref)
     -> llvm::Value * {
   using unary_op = ast::unary_operation;
 
+  reset_currently_statement();
   auto *op = apply(ref.expr());
   assert(op);
 
@@ -469,9 +551,11 @@ auto codegen_visitor::generate(const ast::function_call &ref) -> llvm::Value * {
                  });
 
   auto *func_type = llvm::FunctionType::get(return_type, args_types, false);
+  auto *destination =
+      m_builder->CreateLoad(llvm::PointerType::get(ctx(), /*AddressSpace=*/0),
+                            frame().lookup_value(ref.name()).value());
 
-  return m_builder->CreateCall(func_type,
-                               frame().lookup_value(ref.name()).value());
+  return m_builder->CreateCall(func_type, destination, args);
 }
 
 auto codegen_visitor::generate(const ast::if_statement &ref) -> llvm::Value * {
@@ -484,6 +568,7 @@ auto codegen_visitor::generate(const ast::if_statement &ref) -> llvm::Value * {
 
   begin_scope(ref.control_block_symtab);
 
+  reset_currently_statement();
   auto *cond_value = apply(ref.cond());
   assert(cond_value);
   auto *bool_cond_value = cond_value = m_builder->CreateIsNotNull(cond_value);
@@ -491,14 +576,23 @@ auto codegen_visitor::generate(const ast::if_statement &ref) -> llvm::Value * {
   m_builder->CreateCondBr(bool_cond_value, then_block,
                           else_block ? else_block : cont_block);
 
-  m_builder->SetInsertPoint(then_block);
-  apply(ref.true_block());
-  m_builder->CreateBr(cont_block);
+  auto compile_basic_block = [&](const ast::i_ast_node &block,
+                                 llvm::BasicBlock *bb) {
+    set_currently_statement();
+    m_builder->SetInsertPoint(bb);
+    apply(block);
+    if (bb->empty())
+      return;
 
+    auto &last_instr = bb->back();
+
+    if (!llvm::isa<llvm::ReturnInst>(last_instr))
+      m_builder->CreateBr(cont_block);
+  };
+
+  compile_basic_block(ref.true_block(), then_block);
   if (else_block) {
-    m_builder->SetInsertPoint(else_block);
-    apply(*ref.else_block());
-    m_builder->CreateBr(cont_block);
+    compile_basic_block(*ref.else_block(), else_block);
   }
 
   frame().end_scope();
@@ -513,20 +607,24 @@ auto codegen_visitor::generate(const ast::while_statement &ref)
   auto *body_block = create_block("body");
   auto *cond_block = create_block("cond");
   auto *exit_block = create_block("exit");
+  auto *cont_block = create_block("cont");
 
   assert(body_block);
   assert(cond_block);
   assert(exit_block);
+  assert(cont_block);
 
   begin_scope(ref.symbol_table);
   m_builder->CreateBr(cond_block);
 
   m_builder->SetInsertPoint(cond_block);
+  reset_currently_statement();
   auto *cond_value = apply(ref.cond());
   assert(cond_value);
   auto *bool_cond_value = cond_value = m_builder->CreateIsNotNull(cond_value);
   m_builder->CreateCondBr(bool_cond_value, body_block, exit_block);
 
+  set_currently_statement();
   m_builder->SetInsertPoint(body_block);
   apply(ref.block());
   m_builder->CreateBr(cond_block);
@@ -534,8 +632,15 @@ auto codegen_visitor::generate(const ast::while_statement &ref)
   frame().end_scope();
 
   m_builder->SetInsertPoint(exit_block);
+  m_builder->CreateBr(cont_block);
+  m_builder->SetInsertPoint(cont_block);
 
   return nullptr;
+}
+
+auto codegen_visitor::generate(const ast::function_definition_to_ptr_conv &ref)
+    -> llvm::Value * {
+  return m_function_defs.at(&ref.definition());
 }
 
 void codegen_visitor::begin_scope(const frontend::symtab &stab) {
@@ -556,13 +661,8 @@ auto emit_llvm_module(llvm::LLVMContext &ctx,
   auto &ast = drv.ast();
   auto filename = absolute(std::filesystem::path(drv.get_filename()));
 
-  const auto *root_node = ast.get_root_ptr();
-  assert(root_node);
-
   auto visitor = codegen_visitor(filename.string(), ctx, drv);
-
   visitor.generate_all(ast);
-
   return visitor.extract_module();
 }
 

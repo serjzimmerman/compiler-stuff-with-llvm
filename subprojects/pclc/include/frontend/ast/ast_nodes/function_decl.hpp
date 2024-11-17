@@ -59,6 +59,9 @@ public:
         type{make_func_type(return_type)} {}
 
 public:
+  auto begin() const { return cbegin(); }
+  auto end() const { return cend(); }
+
   using vector::begin;
   using vector::cbegin;
   using vector::cend;
