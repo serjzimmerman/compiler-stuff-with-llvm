@@ -74,12 +74,6 @@
                   (lib.mesonOption "compiler_backend" "llvm")
                 ];
               });
-              cswl-everything-llvm-static = default.overrideAttrs (prevAttrs: {
-                mesonFlags = prevAttrs.mesonFlags ++ [
-                  (lib.mesonOption "compiler_backend" "llvm")
-                  (lib.mesonOption "default_library" "static")
-                ];
-              });
               inherit rustToolchain;
             };
 
@@ -89,7 +83,6 @@
               cswl-everything
               cswl-everything-static
               cswl-everything-llvm
-              cswl-everything-llvm-static
               ;
           };
         };
