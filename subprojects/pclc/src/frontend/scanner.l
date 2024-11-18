@@ -52,6 +52,9 @@ cpp_style_comment ([/][/].*)
 "&&"            { return parser::make_LOGICAL_AND(update_loc()); }
 "||"            { return parser::make_LOGICAL_OR(update_loc()); }
 
+"<<"            { return parser::make_LEFT_SHIFT(update_loc()); }
+">>"            { return parser::make_RIGHT_SHIFT(update_loc()); }
+
 "!"             { return parser::make_BANG(update_loc()); }
 "?"             { return parser::make_QMARK(update_loc()); }
 

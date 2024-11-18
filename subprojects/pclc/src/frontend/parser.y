@@ -112,6 +112,9 @@ static paracl::frontend::parser::symbol_type yylex(paracl::frontend::scanner &p_
 %token LOGICAL_AND  "&&"
 %token LOGICAL_OR   "||"
 
+%token RIGHT_SHIFT  ">>"
+%token LEFT_SHIFT   "<<"
+
 %token SEMICOL  ";"
 %token COL      ":"
 %token COMMA    ","
@@ -229,9 +232,11 @@ multiplicative_expression:
 | unary_expression                                      { $$ = $1; }
 
 additive_expression:
-  additive_expression PLUS multiplicative_expression    { $$ = driver.make_ast_node<ast::binary_expression>(ast::binary_operation::E_BIN_OP_ADD, *$1, *$3, @$); }
-| additive_expression MINUS multiplicative_expression   { $$ = driver.make_ast_node<ast::binary_expression>(ast::binary_operation::E_BIN_OP_SUB, *$1, *$3, @$); }
-| multiplicative_expression                             { $$ = $1; }
+  additive_expression PLUS multiplicative_expression         { $$ = driver.make_ast_node<ast::binary_expression>(ast::binary_operation::E_BIN_OP_ADD, *$1, *$3, @$); }
+| additive_expression MINUS multiplicative_expression        { $$ = driver.make_ast_node<ast::binary_expression>(ast::binary_operation::E_BIN_OP_SUB, *$1, *$3, @$); }
+| additive_expression LEFT_SHIFT multiplicative_expression   { $$ = driver.make_ast_node<ast::binary_expression>(ast::binary_operation::E_BIN_OP_SHL, *$1, *$3, @$); }
+| additive_expression RIGHT_SHIFT multiplicative_expression  { $$ = driver.make_ast_node<ast::binary_expression>(ast::binary_operation::E_BIN_OP_LSHR, *$1, *$3, @$); }
+| multiplicative_expression                                  { $$ = $1; }
 
 comparison_expression:
   comparison_expression COMP_GT additive_expression     { $$ = driver.make_ast_node<ast::binary_expression>(ast::binary_operation::E_BIN_OP_GT, *$1, *$3, @$); }

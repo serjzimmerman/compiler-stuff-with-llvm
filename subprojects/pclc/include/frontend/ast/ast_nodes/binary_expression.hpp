@@ -30,6 +30,8 @@ enum class binary_operation {
   E_BIN_OP_LE,
   E_BIN_OP_AND,
   E_BIN_OP_OR,
+  E_BIN_OP_LSHR,
+  E_BIN_OP_SHL,
 };
 
 constexpr std::string_view binary_operation_to_string(binary_operation op) {
@@ -61,6 +63,10 @@ constexpr std::string_view binary_operation_to_string(binary_operation op) {
     return "&&";
   case bin_op::E_BIN_OP_OR:
     return "||";
+  case bin_op::E_BIN_OP_LSHR:
+    return ">>";
+  case bin_op::E_BIN_OP_SHL:
+    return "<<";
   }
 
   assert(0); // We really shouldn't get here. If we do, then someone has broken

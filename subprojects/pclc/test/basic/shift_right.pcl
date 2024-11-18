@@ -1,0 +1,24 @@
+// REQUIRES: llvm
+// RUN: pclc %s | FileCheck %s
+
+int a = 1;
+print a;
+
+while (a < 8) {
+  a = a << 1;
+  print a;
+}
+
+while (a) {
+  a = a >> 1;
+  print a;
+}
+
+// CHECK: 1
+// CHECK-NEXT: 2
+// CHECK-NEXT: 4
+// CHECK-NEXT: 8
+// CHECK-NEXT: 4
+// CHECK-NEXT: 2
+// CHECK-NEXT: 1
+// CHECK-NEXT: 0
