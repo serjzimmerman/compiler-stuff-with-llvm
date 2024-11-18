@@ -78,3 +78,43 @@ mkdir artifacts/03-ad-hoc-ir-generation/llvm-ir -p
 cargo run --package cswl-irgen --release > \
   artifacts/03-ad-hoc-ir-generation/llvm-ir/day_night.ll
 ```
+
+### ParaCL Compiler and Fractals
+
+See [README](/subprojects/pclc/README.md) for the description of ParaCL language. It has an exensive
+[llvm-lit](https://llvm.org/docs/CommandGuide/lit.html) based test suite under the [test](/subprojects/pclc/test) directory.
+
+#### Build instructions
+
+```bash
+meson setup build -Dbuildtype=release -Dtests=false -Dprefix=$(pwd)/out -Dcompiler_backend=llvm --reconfigure
+meson compile -C build
+meson install -C build
+```
+
+To run the test suite with sanitizers and assertions:
+
+```bash
+meson setup build -Ddefault_library=shared -Dbuildtype=debug -Dtests=true -Dprefix=$(pwd)/out -Dcompiler_backend=llvm -Db_sanitize=address,undefined -Db_lundef=false --reconfigure
+meson test -C build
+```
+
+#### Fractals
+
+![](/images/fractals.gif)
+
+Complete the steps described in the build instructions and run:
+
+```bash
+out/bin/pclc subprojects/pclc/examples/fractals.pcl
+# Pass the `--debug` to dump the llvm ir
+out/bin/pclc --debug subprojects/pclc/examples/fractals.pcl
+# ; ModuleID = 'subprojects/pclc/examples/fractals.pcl'
+# source_filename = "subprojects/pclc/examples/fractals.pcl"
+#
+# @ZOOM_RATIO = global i32 0
+# @imag_width = global i32 0
+# @real_width = global i32 0
+# @imag_center = global i32 0
+# @real_center = global i32 0
+```

@@ -69,11 +69,28 @@
                   (lib.mesonOption "default_library" "static")
                 ];
               });
+              cswl-everything-llvm = default.overrideAttrs (prevAttrs: {
+                mesonFlags = prevAttrs.mesonFlags ++ [
+                  (lib.mesonOption "compiler_backend" "llvm")
+                ];
+              });
+              cswl-everything-llvm-static = default.overrideAttrs (prevAttrs: {
+                mesonFlags = prevAttrs.mesonFlags ++ [
+                  (lib.mesonOption "compiler_backend" "llvm")
+                  (lib.mesonOption "default_library" "static")
+                ];
+              });
               inherit rustToolchain;
             };
 
           checks = {
-            inherit (self'.packages) cswl-sim cswl-everything cswl-everything-static;
+            inherit (self'.packages)
+              cswl-sim
+              cswl-everything
+              cswl-everything-static
+              cswl-everything-llvm
+              cswl-everything-llvm-static
+              ;
           };
         };
     };

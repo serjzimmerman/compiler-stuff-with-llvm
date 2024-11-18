@@ -13,6 +13,7 @@ if get_option('compiler_backend') == 'vm'
         link_with: pclc_bytecode_vm,
         dependencies: [pclc_headers_dep, popl_dep],
         install: true,
+        install_rpath: '$ORIGIN/../lib',
     )
 
     pclvm = executable(
@@ -21,6 +22,7 @@ if get_option('compiler_backend') == 'vm'
         link_with: pclc_bytecode_vm,
         dependencies: [pclc_headers_dep, popl_dep],
         install: true,
+        install_rpath: '$ORIGIN/../lib',
     )
 
     pclc_deps += [declare_dependency(link_with: pclc_bytecode_vm)]
@@ -53,6 +55,7 @@ pclc = executable(
     ['pclc.cpp', pclc_frontend_headers],
     dependencies: pclc_deps,
     install: true,
+    install_rpath: '$ORIGIN/../lib',
     cpp_args: pclc_definitions,
 )
 
