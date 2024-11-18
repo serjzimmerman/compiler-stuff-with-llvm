@@ -456,8 +456,8 @@ auto codegen_visitor::generate(const ast::binary_expression &ref)
       return m_builder->CreateOr(lhs, rhs);
     case bin_op::E_BIN_OP_SHL:
       return m_builder->CreateShl(lhs, rhs);
-    case bin_op::E_BIN_OP_LSHR:
-      return m_builder->CreateLShr(lhs, rhs);
+    case bin_op::E_BIN_OP_ASHR:
+      return m_builder->CreateAShr(lhs, rhs);
     default:
       std::terminate();
     }

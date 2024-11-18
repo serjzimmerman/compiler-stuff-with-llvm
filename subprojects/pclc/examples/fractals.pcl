@@ -1,0 +1,97 @@
+// SEE: https://github.com/rahra/intfract
+// LICENSE: https://github.com/rahra/intfract/blob/master/COPYING
+
+MAXITERATE = 64;
+NORM_BITS = 12;
+NORM_FACT = 1 << NORM_BITS;
+SIM_X_SIZE = 512;
+SIM_Y_SIZE = 256;
+
+it8 = func (x) {
+  return (((x) * 255) / MAXITERATE);
+};
+
+func (int real0, int imag0): iterate {
+  realq = imagq = real = imag = 0;
+  i = 0;
+
+  real = real0;
+  imag = imag0;
+
+  while (i < MAXITERATE) {
+    realq = (real * real) >> NORM_BITS;
+    imagq = (imag * imag) >> NORM_BITS;
+
+    if ((realq + imagq) > 4 * NORM_FACT)
+       return i;
+
+    imag = ((real * imag) >> (NORM_BITS - 1)) + imag0;
+    real = realq - imagq + real0;
+
+    i = i + 1;
+  }
+
+  return i;
+};
+
+func (int itcnt): fract_color {
+  if (itcnt >= MAXITERATE) {
+    return 0;
+  }
+  return it8(itcnt) << 17;
+};
+
+func (realmin, imagmin, realmax, imagmax): draw_mand {
+  x = y = 0;
+
+  deltareal = deltaimag = real0 = imag0 = 0;
+
+  deltareal = realmax - realmin;
+  deltaimag = imagmax - imagmin;
+
+  while (x < SIM_X_SIZE) {
+    real0 = realmin + (deltareal * x) / SIM_X_SIZE;
+
+    y = 0;
+    while (y < SIM_Y_SIZE) {
+      imag0 = imagmax - (deltaimag * y) / SIM_Y_SIZE;
+      num_iter = iterate(real0, imag0);
+      color = fract_color(num_iter);
+
+      _y = 0;
+      while ((y < SIM_Y_SIZE) && (deltaimag * _y < SIM_Y_SIZE)) {
+        _y = _y + 1;
+        y = y + 1;
+        sim_put_pixel(x, (SIM_Y_SIZE - y - 1), color);
+      }
+    }
+
+    x = x + 1;
+  }
+}
+
+sim_init();
+
+func (int value_): conv_to_fp {
+  return value_ * NORM_FACT;
+}
+
+min_imag = conv_to_fp(-1);
+max_imag = conv_to_fp(1);
+
+real_center = -conv_to_fp(1) - (conv_to_fp(1) * 4) / 10;
+imag_center = (max_imag + min_imag) / 2;
+real_width = conv_to_fp(1) * SIM_X_SIZE / SIM_Y_SIZE;
+imag_width = conv_to_fp(1);
+
+ZOOM_RATIO = 1 << (NORM_BITS / 2);
+
+while (1) {
+  draw_mand(real_center - real_width, imag_center - imag_width, real_center + real_width, imag_center + imag_width);
+  sim_flush();
+
+  real_width = real_width - real_width / ZOOM_RATIO;
+  imag_width = imag_width - imag_width / ZOOM_RATIO;
+}
+
+sim_exit();
